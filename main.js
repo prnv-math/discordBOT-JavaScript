@@ -8,8 +8,8 @@ const dbClient = new MongoClient(url);
 
 const dbName = 'jsdb';
 
+const client = new discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES", 'GUILD_MESSAGE_REACTIONS'] })
 
-const client = new discord.Client({intents: ["GUILDS", "GUILD_MESSAGES"]});
 const prefix = "/"
 console.log("running code")
 ownerid = config.ownerid
@@ -121,6 +121,7 @@ client.on('interactionCreate', async interaction => {
       }
       else {
         console.log("Existing user");
+        
       }
     // }
     // catch{
@@ -183,14 +184,40 @@ client.on('interactionCreate', async interaction => {
     em(":currency_exchange: Interaction commands :currency_exchange:", ["mail", "give", "phone"])
     em(":diamonds: Misc commands :diamonds:", ["action", "gameplayinfo", "rules", "noticeboard", "invite","sos"])
 
-    await interaction.reply({ embeds: [e] })
+    await interaction.reply({ embeds: [e] });
+    
   }
   else if(interaction.commandName === 'start')
   {
     if (!filteredDocs['gameid']) 
     {
-    let msg = await interaction.reply({content: ">>> [ boots up ]\n\nYou want to play Disco-Life! \nCheck out gameplayinfo,\nMake sure you have read and\naccepted the rules .\nThen react with :thumbsup: !\n\n`"+prefix.toLowerCase()+" gameplayinfo`, `"+prefix.toLowerCase()+" rules`", fetchReply:true})
-    await msg.react('👍')
+    const message = await interaction.reply({content: ">>> [ boots up ]\n\nYou want to play Disco-Life! \nCheck out gameplayinfo,\nMake sure you have read and\naccepted the rules .\nThen react with :thumbsup: !\n\n`"+prefix.toLowerCase()+" gameplayinfo`, `"+prefix.toLowerCase()+" rules`", fetchReply:true})
+    let emo = '👍';
+    message.react(emo);
+    // ==============================
+    // wait for reaction thumbsup
+     
+    const filter = (reaction, user) => {
+      // console.log(reaction.emoji.name);
+      return [emo].includes(reaction.emoji.name) && user.id === interaction.user.id;
+    };
+    
+    message.awaitReactions({ filter, max: 1, time: 25000, errors: ['time'] })
+    .then(collected => {
+      const reaction = collected.first();
+  
+      if (reaction.emoji.name === emo) {
+        channel.send('You reacted with a thumbs up.');
+        //RESUME   HERE
+      }
+    })
+    .catch(collected => {
+      channel.send('`no reaction found`');
+    });
+
+    // ==============================
+    
+    
     }
     else {
       if(filteredDocs['status']  != 'customize')
