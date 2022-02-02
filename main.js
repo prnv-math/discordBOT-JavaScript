@@ -10,6 +10,7 @@ const dbName = 'jsdb';
 
 const client = new discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES", 'GUILD_MESSAGE_REACTIONS'] })
 
+globalOBJ = {};
 const prefix = "/"
 console.log("running code")
 ownerid = config.ownerid
@@ -47,14 +48,37 @@ function emb(t,desc="", col = 0x3AABC2)
 async function dbmain() 
 {
   await dbClient.connect();
-  console.log('Connected successfully to server');
+  console.log('Connected successfully to ' + url);
   const db = dbClient.db(dbName);
-  collection = db.collection('documents');
+  globalOBJ.collection = db.collection('documents');
+  
+  // globalOBJ.collection.deleteMany({});
+  // the code examples can be pasted here...
 
-  // the following code examples can be pasted here...
+  // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
+  // console.log('Inserted documents =>', insertResult);
+  
+  // let res = await globalOBJ.collection.find({userid:1}).toArray();
 
+  // =============================================================
+  // console.log(res);
+  // console.log(res[0]['gameid']);
+  // ============================================================
+  
   return 'done.';
 
+}
+
+
+
+async function getGameid(uid) {
+
+  const res = await globalOBJ.collection.find({userid:uid}).toArray();
+  if (res[0]['gameid']) 
+  {
+    return res[0]['gameid'];
+  }
+  else return 0;
 }
 
 client.on('ready', () => {
@@ -108,19 +132,17 @@ client.on('interactionCreate', async interaction => {
   // console.log(interaction.toString())
   // console.log(interaction)
   const channel=interaction.channel;
-  let filteredDocs = {};
+  const checkusr = getGameid(interaction.member.id);
   if ((interaction.commandName != 'start') && (interaction.commandName != 'help') && (interaction.member.id != ownerid))
   {
     // try {
       console.log("trigger user check in db");
-      filteredDocs = await collection.find({ 'userid': interaction.member.id }).toArray();
-      if (!filteredDocs['gameid']){
-        console.log("User not in db. Response sent.")
+      if (checkusr == 0){
         interaction.reply("You are a new face! Check out `"+prefix+" help` or `"+prefix+" start` <@" + interaction.member.id + ">");
         return;
       }
       else {
-        console.log("Existing user");
+        console.log(checkusr + 'is existing user');
         
       }
     // }
@@ -189,7 +211,7 @@ client.on('interactionCreate', async interaction => {
   }
   else if(interaction.commandName === 'start')
   {
-    if (!filteredDocs['gameid']) 
+    if (checkusr != 0) 
     {
     const message = await interaction.reply({content: ">>> [ boots up ]\n\nYou want to play Disco-Life! \nCheck out gameplayinfo,\nMake sure you have read and\naccepted the rules .\nThen react with :thumbsup: !\n\n`"+prefix.toLowerCase()+" gameplayinfo`, `"+prefix.toLowerCase()+" rules`", fetchReply:true})
     let emo = '👍';
