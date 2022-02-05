@@ -202,31 +202,42 @@ client.on('interactionCreate', async interaction => {
   //  await channel.send("> customize profile :");
   //  let res = await store_avatars();
    
-   let avatar = "";
-
-   const file = new discord.MessageAttachment('fimg.jpg');
-   
-   const file2 = new discord.MessageAttachment('mimg.jpg');
-
-
-   await channel.send({files : [file, file2]});
-   const m1 = await channel.send("> 1 : please select character" + " <@" + interaction.member.id + ">");
-   
-   const emo = ['♀️','♂️'];
-   try {
+    let avatar = "";
+    
+    const embb = {
+      color: 0x3AABC2,
+      title: interaction.member.name,
+      url: '',
+      author: {
+        name : interaction.member.user.username,
+        icon_url: interaction.member.displayAvatarURL(),
+        url: '',
+      },
+      description: '`1 : please react with the number associated with a character`',
+      // thumbnail: {
+      //   url: 'https://i.imgur.com/othxZum.png',
+      // },
+      image : {
+        url : 'https://i.imgur.com/sflhks0.jpg'
+      }
+    };
+    const m1 = await channel.send({embeds : [embb]})
+    let char = "";
+    const emo = ['1️⃣','2️⃣'];
+    try {
      await m1.react(emo[0]);
      await m1.react(emo[1]);
-   }catch (err) {
+    }catch (err) {
        console.error('failed to add reaction [' + err + "]");
-   }
+    }
 
-   const filter = (reaction, user) => {
+    const filter = (reaction, user) => {
       // console.log(reaction.emoji.name);
-      return emo.includes(reaction.emoji.name) && (user.id === interaction.member.id);
-   };
+         return emo.includes(reaction.emoji.name) && (user.id === interaction.member.id);
+    };
     
-   m1.awaitReactions({ filter, max: 1, time: 10000, errors: ['time'] })
-    .then(async collected => {
+    m1.awaitReactions({ filter, max: 1, time: 10000, errors: ['time'] })
+     .then(async collected => {
       const reaction = collected.first();
 
       if (reaction.emoji.name === emo[0]) {
@@ -235,30 +246,58 @@ client.on('interactionCreate', async interaction => {
       else {
         char = "male_teen";
       }
-      m1.channel.send("`You reacted with "+char+"`");
-      
-      const m2 = await m1.channel.send(">>> 2 : please enter a username\n(use letters, digits, and underscore)\n`/action username <enter username>`");
-      const filter2 = response => {
-        return response.content.toLowerCase().startsWith('/action username');
+      m1.channel.send(">>> 2 : please enter a username\n```you can use letters, digits, or underscore.\nusername must begin with a letter.\nduplicate usernames not allowed.\nmust have at least 4 characters length.\nyou can use 'select username' for this.```\n`select username thisIsMyUsername`");
+      const filter = response => {
+        console.log("called filter2")
+        let check = false;
+        if (response.content.toLowerCase().startsWith('select username ')){
+          let s = response.content.split('select username ')[1];
+          console.log("s[0] : " + s[0])
+          const dictionary = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_";
+          const start = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+          for (i in start) {
+            if (s.startsWith(start[i])) {
+              check = 1;
+            }
+          }
+          if (check === 0) {
+            channel.send('`invalid starting symbol`')
+          }
+          const arr = dictionary.split('');
+          for (j in s) {
+              if (arr.includes(s[j]) === false)
+              { 
+                channel.send("`invalid character detected`")
+                check = 0;
+              }
+          }
+          if (s.length < 4) {
+              channel.send("`insufficient length`");
+              check = 0;
+          }
+        }
+        console.log(check);
+        return check;
       };
-      m2.channel.awaitMessages({ filter2, max: 1, time: 30000, errors: ['time'] })
+      interaction.channel.awaitMessages({ filter , max: 1, time: 45000, errors: ['time'] })
         .then (collected => {
-          channel.send(`> ${collected.first().content.split(' ', 3)[2]} detected`);
           const res = collected.first().content.split(' ', 3)[2];
           console.log("username : " + res);
+          channel.send(`${res} detected`);
+          //CONTINUE CUSTOMIZE PROFILE
         
         
         // ==============
         })
         .catch(collected => {
-          channel.send('`no response found`');
+          channel.send('> no response found');
         });
       
       // ==============
-    })
-    .catch(collected => {
-    m1.reply('`You reacted with neither emotes.`');
-    });
+     })
+     .catch(collected => {
+     m1.reply('`You reacted with neither emotes.`');
+     });
   
    
   //  =============================
@@ -339,11 +378,6 @@ client.on('interactionCreate', async interaction => {
   else if (interaction.commandName === 'rules')
   {
     e = emb("DISCO-LIFE : Rules", "`rules are necessary and understood regulations you must not defy in order to create a frinedly environment for everyone. Doing so will result in severe punishment, or a ban to make it a better place for other players.`")
-    // e.addField("#1 ", "In any social platform the game provides wihtin itself, you aren't compelled to be friendly, but do not be toxic , bully, intimidate, shame, insult, harass, troll, flame, cause upset or shock to another person, or exhibit vulgar , racist , or **any kind of hostile behavior,** towards other players in the game.");
-    // e.addField("#2 ", "Do not engage in **illegal things** within the game! including breaking Discord tos, using hacks, mods, cheats, automation software (commonly known as 'scripts', 'macros', or 'bots').");
-    // e.addField("#3 ", "Do not use resources gathered in the game for **'real money trading'.**");
-    // e.addField("#4 ", "You may not exploit **errors in design** ('bugs') or features which have not been documented to gain access which is otherwise not available or to gain an advantage over other Users, and You may not communicate any exploitable issues either directly or through public posting, to any other users of Disco'Life's Services")
-    // e.addField("#5 ", "While allowed to select a username for any item in the game, **do not use" +  " INAPPROPRIATE OR DISALLOWED NAMES.** the game RESERVES THE RIGHT TO REJECT ANY NAME IT CONCLUDES, IN ITS SOLE DISCRETION, IS OFFENSIVE, OBSCENE, OR THAT OTHERWISE VIOLATES THE NAMING POLICY FOR USERNAMES.".toLocaleLowerCase());
     e.addField("\u200B"+"\n" + "\u200B" +"#1 ", "In any social platform the game provides wihtin itself, do not be toxic , bully, intimidate, shame, insult, harass, troll, flame, cause upset or shock to another person, or exhibit vulgar , racist , or __any kind of hostile behavior,__ towards other players in the game.");
     e.addField("\u200B"+"\n" + "\u200B" +"#2 ", "Do not engage in __illegal things__ within the game! including breaking Discord ToS, using hacks, mods, cheats, automation software (commonly known as 'scripts', 'macros', or 'bots').");
     e.addField("\u200B"+"\n" + "\u200B" +"#3 ", "Do not use resources gathered in the game for __'real money trading'.__");
