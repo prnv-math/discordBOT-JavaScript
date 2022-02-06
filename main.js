@@ -48,7 +48,7 @@ async function dbmain()
   // globalOBJ.collection.deleteMany({});
   globalOBJ.collection.deleteMany({userid : {$not : {$in : [ownerid, 0, 1]}}});
   
-  // globalOBJ.collection.updateOne({userid:ownerid}, {$set : {likes: 35,bottom : 'none' , rstatus : 'single', username : 'cass',level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none'}})
+  globalOBJ.collection.updateOne({userid:ownerid}, {$set : {likes: 35,bottom : 'none' , rstatus : 'single', username : 'cass',level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here'}})
  
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
  
@@ -56,6 +56,7 @@ async function dbmain()
   // userid = 1 = item name and image url {userid : 1, item1 : url, item2 : url, item3 : url} search res[0][outfit]
   
   // await globalOBJ.collection.insertOne({userid : 1, female_teen : '', male_teen : ''});
+  // await globalOBJ.collection.updateOne({userid : 1}, {$set : {female_teen : 'https://i.imgur.com/erzQLL9.jpg',male_teen : 'https://i.imgur.com/9fuHTih.jpg'}});
 
   // const r = await globalOBJ.collection.insertOne({userid : 0, gameid : 11121513, name : 'bot', });
 
@@ -248,17 +249,19 @@ client.on('interactionCreate', async interaction => {
         char = "male_teen";
       }
       m1.channel.send(">>> 2 : please enter a username\n```you can use letters, digits, or underscore.\nusername must begin with a letter.\nmust be at least 4 characters long (max. 16).```");
+      let s = "";
       const filter = response => {
         if (response.author != interaction.member.user) {
-          return 0;
+          return false;
         }
         console.log("called filter2")
-          const s = response.content; 
-          console.log("s[0] : " + s[0])
+           s = response.content;
+          let check = false; 
           const dictionary = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_";
           const start = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
           for (i in start) {
             if (s.startsWith(start[i])) {
+              console.log("s starts with /" + start[i] +"/")
               check = 1;
             }
           }
@@ -274,6 +277,7 @@ client.on('interactionCreate', async interaction => {
               { 
                 channel.send("`invalid character detected`")
                 check = 0;
+                break;
               }
           }
           if (s.length < 4) {
@@ -284,15 +288,17 @@ client.on('interactionCreate', async interaction => {
             channel.send("`maximum length is 16 characters.`");
             check = 0;
           }
-        console.log(check);
+        console.log('check : ' + check);
+        channel.send("`you entered " + s + '`');
         return check;
       };
       interaction.channel.awaitMessages({ filter , max: 1, time: 45000, errors: ['time'] })
-        .then (collected => {
-          const res = collected.first().content.split(' ', 3)[2];
+        .then (() => {
+          // channel.send(collected.content);
+          const res = s;
           console.log("username : " + res);
           changeStatus(interaction.member.id, "profile_created");
-          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : 0,char : char, bottom : 'none' , rstatus : 'single', username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none'}})
+          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : 0,char : char, bottom : 'none' , rstatus : 'single', username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here'}})
           .then (() => {
           channel.send('`[success] profile created for ' + res + '`\n`try out other commands or use /help`');
           });
@@ -376,11 +382,11 @@ client.on('interactionCreate', async interaction => {
     }
     
 
-    em(":bookmark: Profile commands :bookmark:", ["start", "profile", "attributes", "boosts", "events", "likes", "inventory", "cooldowns"])
+    em(":bookmark: Profile commands :bookmark:", ["start", "profile", "attributes", "boosts", "events", "like", "inventory", "hashtag","cooldowns"])
     em(":beginner: Menu commands :beginner:", ["bank", "shop", "jobs", "education", "health", "apartments", "relationship"])
     em(":gift: Rewards commands :gift:", ["daily", "weekly", "votetrend", "checkin", "redeem", "quiz"])
     em(":currency_exchange: Interaction commands :currency_exchange:", ["mail", "give", "phone"])
-    em(":diamonds: Misc commands :diamonds:", ["newcommand", "gameplayinfo", "rules", "noticeboard", "invite","sos"])
+    em(":diamonds: Misc commands :diamonds:", ["support", "gameplayinfo", "rules", "noticeboard", "invite","sos"])
 
     await interaction.reply({ embeds: [e] });
     
@@ -455,7 +461,7 @@ client.on('interactionCreate', async interaction => {
   }
   else if (interaction.commandName === 'profile')
   {
-    interaction.reply("`WIP`");
+    // interaction.reply("`WIP`");
 
     const res = await globalOBJ.collection.find({userid : interaction.member.id}).toArray();
     try {
@@ -466,32 +472,87 @@ client.on('interactionCreate', async interaction => {
       const char = res[0]['char'];
 
       const pet = res[0]['favpet'];
+      const tag = res[0]['tag'];
       const likes = res[0]['likes'];
       const relationshipstatus = res[0]['rstatus'];
       const level = res[0]['level'];
       const username = res[0]['username'];
-
+      // channel.send("`profile of "+username+"`");
       const URLres= await globalOBJ.collection.find({userid : 1}).toArray();
+      let charURL = "";
+      let accessURL = "";
+      let topURL = "";
+      let bottomURL = "";
+      let outfitURL = "";
+      const font = await jimp.loadFont('./res/font/font1/futur_book.fnt');
 
       if (res[0]['accessory'] != 'none') {
-        const accessURL = URLres[0][accessory];
+        accessURL = URLres[0][accessory];
       }
       if (res[0]['top'] != 'none') {
-        const topURL = URLres[0][top];
+        topURL = URLres[0][top];
       }
       if (res[0]['bottom'] != 'none') {
-        const bottomURL = URLres[0][bottom];
+        bottomURL = URLres[0][bottom];
       }
       if (res[0]['char'] != 'none') {
-        const charURL = URLres[0][char];
+        charURL = URLres[0][char];
       }
       if (res[0]['outfit'] != 'none') {
-        const outfitURL = URLres[0][outfit];
+        outfitURL = URLres[0][outfit];
       }
+      let charbg = await jimp.read(charURL);
+      charbg.resize(128,128);
+      charbg.print(font, 90, 2, 'level ' + level );
+      let imgBuf = await charbg.getBufferAsync(jimp.AUTO);
+      embb =
+      {
+      color: 0x3AABC2,
+      title: interaction.member.name,
+      url: '',
+      author: {
+        name : username,
+        icon_url: 'https://i.imgur.com/yjSWVPs.jpg',
+        url: '',
+      },
+      description: '`'+ tag +'`',
+      // thumbnail: {
+      //   url: 'https://i.imgur.com/othxZum.png',
+      // },
+      image : {
+        url : 'attachment://image.jpg'
+      },
+      fields : [{
+        name : "likes",
+        value : `${likes}`,
+        
+      },
+        {
+          name : 'designation',
+          value : 'student',
+          
+        },
+        // {
+        //    name: '\u200B', value: '\u200B', inline : 0
+        // },
+        {
+          name : 'relationship',
+          value : 'single',
+          
+
+        },
+        {
+          name : 'pet',
+          value : pet,
+          
+        }
+      ]
+      };
+      interaction.reply({embeds : [embb], files: [{name: "image.jpg", attachment:imgBuf}]})
 
     }
     catch {
-        channel.send('`error loading item values & images`')
+        interaction.reply('`error loading item values & images`')
     }
   }
 });
