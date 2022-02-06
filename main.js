@@ -5,6 +5,7 @@ const config = require("./config.json");
 var jimp = require('jimp');
 
 const { MongoClient } = require('mongodb');
+const { FONT_SANS_10_BLACK } = require("jimp");
 const url = 'mongodb://localhost:27017';
 const dbClient = new MongoClient(url);
 
@@ -45,19 +46,23 @@ async function dbmain()
   globalOBJ.collection = db.collection('documents');
   
   // globalOBJ.collection.deleteMany({});
-  // the code examples can be pasted here...
-
+  globalOBJ.collection.deleteMany({userid : {$not : {$in : [ownerid, 0, 1]}}});
+  
+  // globalOBJ.collection.updateOne({userid:ownerid}, {$set : {likes: 35,bottom : 'none' , rstatus : 'single', username : 'cass',level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none'}})
+ 
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
  
-  // console.log('Inserted documents =>', insertResult);
+  // userid = 0 = bot details
+  // userid = 1 = item name and image url {userid : 1, item1 : url, item2 : url, item3 : url} search res[0][outfit]
+  
+  // await globalOBJ.collection.insertOne({userid : 1, female_teen : '', male_teen : ''});
 
-  const r = await globalOBJ.collection.insertOne({userid : 0, gameid : 11121513, name : 'bot', });
+  // const r = await globalOBJ.collection.insertOne({userid : 0, gameid : 11121513, name : 'bot', });
 
   let res = await globalOBJ.collection.find({userid:0}).toArray();
 
   // =============================================================
-  // console.log(res);
-  console.log(res[0]);
+  console.log("Bot gameID : "+res[0]['gameid']);
   res = await globalOBJ.collection.find({userid:ownerid}).toArray();
   console.log(res[0]);
   console.log("find owner gameid : " + res[0]['gameid']);
@@ -73,8 +78,8 @@ function deluser(uid) {
 // deluser(ownerid);
 
 async function getStatus(uid) {
-  console.log("whole collection : ");
-  globalOBJ.collection.find().toArray();
+  // console.log("whole collection : ");
+  // globalOBJ.collection.find().toArray();
   let res = await globalOBJ.collection.find({userid:uid}).toArray();
   console.log("get status res : " + res[0]['status']);
  
@@ -176,34 +181,30 @@ client.on('interactionCreate', async interaction => {
 
   
   // ==============
-  async function store_avatars()
+  async function jimpLoad()
   {
-    let f =  jimp.read('https://i.imgur.com/Z2LbWqO.jpg', (err, fem) => {
-      if (err) throw err;
-      fem
-        .resize(64, 64) // resize
-        .quality(60) // set JPEG quality
-         // set greyscale
-        .write('fimg.jpg'); // save
-     });
-
-    let f2 = jimp.read('https://i.imgur.com/9fuHTih.jpg', (err2, m) => {
-    if (err2) throw err2;
-    m
-      .resize(64, 64) // resize
-      .quality(60) // set JPEG quality
-       // set greyscale
-      .write('mimg.jpg'); // save
-   });
-   return 'done';
+    
+    return imgbuf;
   }
   async function customizepfp() {
     
-  //  await channel.send("> customize profile :");
-  //  let res = await store_avatars();
-   
-    let avatar = "";
-    
+  //  Take image from URL , and generate a buffer for it. 
+  //  In order to use image in URL in embed.
+  // ========================================
+  const font = await jimp.loadFont(jimp.FONT_SANS_16_WHITE);
+  let bg = await jimp.read('https://i.imgur.com/iIUyIgf.jpg');
+  bg.quality(60);
+  bg.resize(590, 128);
+  let img1 = await jimp.read('https://i.imgur.com/erzQLL9.jpg');
+  img1.resize(64,64);
+  let img2 = await jimp.read('https://i.imgur.com/9fuHTih.jpg');
+  img2.resize(64,64);
+  bg.composite(img1, 220,30);
+  bg.composite(img2,300,30);
+  bg.print(font, 249, 100, '1                  2');
+
+  let imgBuf = await bg.getBufferAsync(jimp.AUTO);
+  // =========================================  
     const embb = {
       color: 0x3AABC2,
       title: interaction.member.name,
@@ -218,10 +219,10 @@ client.on('interactionCreate', async interaction => {
       //   url: 'https://i.imgur.com/othxZum.png',
       // },
       image : {
-        url : 'https://i.imgur.com/sflhks0.jpg'
+        url : 'attachment://image.jpg'
       }
     };
-    const m1 = await channel.send({embeds : [embb]})
+    const m1 = await channel.send({embeds : [embb], files: [{name: "image.jpg", attachment:imgBuf}]})
     let char = "";
     const emo = ['1️⃣','2️⃣'];
     try {
@@ -236,7 +237,7 @@ client.on('interactionCreate', async interaction => {
          return emo.includes(reaction.emoji.name) && (user.id === interaction.member.id);
     };
     
-    m1.awaitReactions({ filter, max: 1, time: 10000, errors: ['time'] })
+    m1.awaitReactions({ filter, max: 1, time: 15000, errors: ['time'] })
      .then(async collected => {
       const reaction = collected.first();
 
@@ -246,12 +247,13 @@ client.on('interactionCreate', async interaction => {
       else {
         char = "male_teen";
       }
-      m1.channel.send(">>> 2 : please enter a username\n```you can use letters, digits, or underscore.\nusername must begin with a letter.\nduplicate usernames not allowed.\nmust have at least 4 characters length.\nyou can use 'select username' for this.```\n`select username thisIsMyUsername`");
+      m1.channel.send(">>> 2 : please enter a username\n```you can use letters, digits, or underscore.\nusername must begin with a letter.\nmust be at least 4 characters long (max. 16).```");
       const filter = response => {
+        if (response.author != interaction.member.user) {
+          return 0;
+        }
         console.log("called filter2")
-        let check = false;
-        if (response.content.toLowerCase().startsWith('select username ')){
-          let s = response.content.split('select username ')[1];
+          const s = response.content; 
           console.log("s[0] : " + s[0])
           const dictionary = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_";
           const start = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -260,9 +262,12 @@ client.on('interactionCreate', async interaction => {
               check = 1;
             }
           }
-          if (check === 0) {
+          if (check == 0) {
             channel.send('`invalid starting symbol`')
           }
+          // else{
+          //   console.log('check after start check : ' + check)
+          // }
           const arr = dictionary.split('');
           for (j in s) {
               if (arr.includes(s[j]) === false)
@@ -275,7 +280,10 @@ client.on('interactionCreate', async interaction => {
               channel.send("`insufficient length`");
               check = 0;
           }
-        }
+          if (s.length > 16) {
+            channel.send("`maximum length is 16 characters.`");
+            check = 0;
+          }
         console.log(check);
         return check;
       };
@@ -283,14 +291,16 @@ client.on('interactionCreate', async interaction => {
         .then (collected => {
           const res = collected.first().content.split(' ', 3)[2];
           console.log("username : " + res);
-          channel.send(`${res} detected`);
-          //CONTINUE CUSTOMIZE PROFILE
-        
-        
+          changeStatus(interaction.member.id, "profile_created");
+          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : 0,char : char, bottom : 'none' , rstatus : 'single', username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none'}})
+          .then (() => {
+          channel.send('`[success] profile created for ' + res + '`\n`try out other commands or use /help`');
+          });
         // ==============
         })
         .catch(collected => {
-          channel.send('> no response found');
+          console.log(collected)
+          channel.send('> no response found ');
         });
       
       // ==============
@@ -308,18 +318,18 @@ client.on('interactionCreate', async interaction => {
   // console.log(interaction)
   const checkusr = await getGameid(interaction.member.id);
   console.log('checkuser = ' + checkusr);
-  if ((interaction.commandName != 'start') && (interaction.commandName != 'help') && (interaction.member.id != ownerid))
+  if ((checkusr < 0) && ((interaction.commandName != 'start') && (interaction.commandName != 'help')) && (interaction.member.id != ownerid))
   {
     // try {
-      console.log("trigger user check in db");
-      if (checkusr < 0){
+      // console.log("trigger user check in db");
+
         interaction.reply("You are a new face! Check out `"+prefix+" help` or `"+prefix+" start` <@" + interaction.member.id + ">");
         return;
-      }
-      else {
-        console.log(checkusr + 'is existing user');
+      
+        // else {
+      //   console.log(checkusr + 'is existing user');
         
-      }
+      // }
   }
 	if (interaction.commandName === 'ping') {
 		await interaction.reply({ content: 'Pong!', ephemeral: 0 });
@@ -370,7 +380,7 @@ client.on('interactionCreate', async interaction => {
     em(":beginner: Menu commands :beginner:", ["bank", "shop", "jobs", "education", "health", "apartments", "relationship"])
     em(":gift: Rewards commands :gift:", ["daily", "weekly", "votetrend", "checkin", "redeem", "quiz"])
     em(":currency_exchange: Interaction commands :currency_exchange:", ["mail", "give", "phone"])
-    em(":diamonds: Misc commands :diamonds:", ["action", "gameplayinfo", "rules", "noticeboard", "invite","sos"])
+    em(":diamonds: Misc commands :diamonds:", ["newcommand", "gameplayinfo", "rules", "noticeboard", "invite","sos"])
 
     await interaction.reply({ embeds: [e] });
     
@@ -411,15 +421,12 @@ client.on('interactionCreate', async interaction => {
       const reaction = collected.first();
   
       if (reaction.emoji.name === emo) {
-        createUser(interaction.member.id);
-        let gid = getGameid(interaction.member.id);
-        channel.send("`please wait a second [backing up your data]`")
-        // setTimeout(() => { channel.send("`[ success ] your game id :" + '(' + globalOBJ.gameid +')`'); }, 7000);
-        // TIMEOUT WORKED AGAINST PROMISE. CONTINUE HERE
-        setTimeout(function() {
-          channel.send("`[ success ] your game id : " + '(' + globalOBJ.gameid +')`'); // runs first
-          customizepfp(interaction); // runs second
-        }, 3000)
+        createUser(interaction.member.id)
+        .then (() => {
+        // channel.send("`[game id : " + + globalOBJ.gameid +']`');
+        customizepfp(interaction);
+        // });
+        });
       }
     })
     .catch(collected => {
@@ -436,8 +443,7 @@ client.on('interactionCreate', async interaction => {
       console.log('chk = ' +checkusr);
       if(status != 'agreed')
       {
-        channel.send( "`game id : ("+ gid +")`, " + '`status : ['+status +']`');
-        interaction.reply("You already have an account.");
+        interaction.reply("You already have an account.\n" + "`game id : ("+ gid +")`\n`try out other commands or use /help`");
       }
       else
       {
@@ -445,6 +451,47 @@ client.on('interactionCreate', async interaction => {
 
         customizepfp(interaction);
       }
+    }
+  }
+  else if (interaction.commandName === 'profile')
+  {
+    interaction.reply("`WIP`");
+
+    const res = await globalOBJ.collection.find({userid : interaction.member.id}).toArray();
+    try {
+      const accessory = res[0]['accessory'];
+      const top = res[0]['top'];
+      const bottom = res[0]['bottom'];
+      const outfit = res[0]['outfit'];
+      const char = res[0]['char'];
+
+      const pet = res[0]['favpet'];
+      const likes = res[0]['likes'];
+      const relationshipstatus = res[0]['rstatus'];
+      const level = res[0]['level'];
+      const username = res[0]['username'];
+
+      const URLres= await globalOBJ.collection.find({userid : 1}).toArray();
+
+      if (res[0]['accessory'] != 'none') {
+        const accessURL = URLres[0][accessory];
+      }
+      if (res[0]['top'] != 'none') {
+        const topURL = URLres[0][top];
+      }
+      if (res[0]['bottom'] != 'none') {
+        const bottomURL = URLres[0][bottom];
+      }
+      if (res[0]['char'] != 'none') {
+        const charURL = URLres[0][char];
+      }
+      if (res[0]['outfit'] != 'none') {
+        const outfitURL = URLres[0][outfit];
+      }
+
+    }
+    catch {
+        channel.send('`error loading item values & images`')
     }
   }
 });
