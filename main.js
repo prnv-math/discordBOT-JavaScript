@@ -46,7 +46,7 @@ async function dbmain()
   globalOBJ.collection = db.collection('documents');
   
   // globalOBJ.collection.deleteMany({});
-  globalOBJ.collection.deleteMany({userid : {$not : {$in : [ownerid, 0, 1]}}});
+  globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
   globalOBJ.collection.updateOne({userid:ownerid}, {$set : {likes: 35,bottom : 'none' , rstatus : 'single', username : 'cass',level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here'}})
  
@@ -58,9 +58,10 @@ async function dbmain()
   // await globalOBJ.collection.insertOne({userid : 1, female_teen : '', male_teen : ''});
   // await globalOBJ.collection.updateOne({userid : 1}, {$set : {female_teen : 'https://i.imgur.com/erzQLL9.jpg',male_teen : 'https://i.imgur.com/9fuHTih.jpg'}});
 
-  // const r = await globalOBJ.collection.insertOne({userid : 0, gameid : 11121513, name : 'bot', });
+  // const r = await globalOBJ.collection.insertOne({userid : 0, gameid : 11121513, name : 'bot', notice : 'no info'});
 
   let res = await globalOBJ.collection.find({userid:0}).toArray();
+  console.log(res);
 
   // =============================================================
   console.log("Bot gameID : "+res[0]['gameid']);
@@ -344,29 +345,39 @@ client.on('interactionCreate', async interaction => {
        if (interaction.member.id === ownerid) 
           { 
             const filter = response => {
-            const s = response.content;
+            const s = response.content.split(' ', 1)[0];
             console.log(s + " , " + ['quit', 'pin'].includes(s));
-            return (response.author.id == ownerid && ['quit'].includes(s));
+            return (response.author.id == ownerid && ['quit', 'pin'].includes(s));
           };
             interaction.reply("`awaiting further instructions...`");
 
-            channel.awaitMessages({ filter , max: 1, time: 20000, errors: ['time'] })
+            channel.awaitMessages({ filter , max: 1, time: 50000, errors: ['time'] })
             .then (collected => 
               {
-              if (collected.first().content === 'quit') { //note to self : i missed first().content part before
+              if (collected.first().content === 'quit') 
+              { //note to self : i missed first().content part before
               interaction.channel.send("``` shutting down ```")
               .then (() => {
+              console.log("COMMIT QUIT")
               dbClient.close();
-              })
+              process.exit();
+              });
 
               }
-              else if (collected.first().content.startsWith('pin')) {
-                const argarray = collected.first().content.split('pin ');
-                globalOBJ.collected.updateOne({userid : 0}, {$set : {notice : argarray[1]}})
+              else if (collected.first().content.startsWith('pin')) 
+              {
+                let argarray = collected.first().content.split('pin ');
+                argarray.splice(0,1);
+                console.log(argarray[0]);
+                globalOBJ.collection.updateOne({userid : 0}, {$set : {notice : argarray[0]}})
                 .then (() => {
                   channel.send("`updated noticeboard`");
+                  client.channels.cache.get('936801672984920116').send("`" + argarray[0] + "`")
                 }
                 )
+                .catch(collected => {
+                  channel.send("`err`");
+                })
               }
             })
             .catch(collected => {
@@ -578,6 +589,11 @@ client.on('interactionCreate', async interaction => {
     catch {
         interaction.reply('`error loading item values & images`')
     }
+  }
+  else if (interaction.commandName === 'noticeboard') {
+    const res = await globalOBJ.collection.find({userid : 0}).toArray();
+    console.log (res)
+    interaction.reply("`" +res[0]['notice']+"`");
   }
 });
 
