@@ -12,7 +12,7 @@ const commands = [
 	new SlashCommandBuilder().setName('ping').setDescription('Replies with pong!'),
 	new SlashCommandBuilder().setName('server').setDescription('Replies with server info!'),
 	new SlashCommandBuilder().setName('user').setDescription('Replies with user info!'),
-	new SlashCommandBuilder().setName('quit').setDescription('staff only command.'),
+	new SlashCommandBuilder().setName('commit').setDescription('staff only command.'),
     new SlashCommandBuilder().setName('help').setDescription('Replies with helpful information for you!'),
     new SlashCommandBuilder().setName('start').setDescription('create an account in Disco-Life!'),
     new SlashCommandBuilder().setName('profile').setDescription('View your Disco-Life profile.'),
