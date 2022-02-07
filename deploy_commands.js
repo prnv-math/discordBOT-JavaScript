@@ -18,6 +18,7 @@ const commands = [
     new SlashCommandBuilder().setName('profile').setDescription('View your Disco-Life profile.'),
 	new SlashCommandBuilder().setName('rules').setDescription('Disco-Life rules.'),
 	new SlashCommandBuilder().setName('gameplayinfo').setDescription('seek general gameplay guidelines.'),
+	new SlashCommandBuilder().setName('noticeboard').setDescription('noticeboard for latest game information!'),
 
 ]
 	.map(command => command.toJSON());
