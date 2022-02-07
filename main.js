@@ -289,7 +289,7 @@ client.on('interactionCreate', async interaction => {
             check = 0;
           }
         console.log('check : ' + check);
-        channel.send("`you entered " + s + '`');
+        // channel.send("`you entered " + s + '`');
         return check;
       };
       interaction.channel.awaitMessages({ filter , max: 1, time: 45000, errors: ['time'] })
