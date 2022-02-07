@@ -368,7 +368,7 @@ client.on('interactionCreate', async interaction => {
               {
                 let argarray = collected.first().content.split('pin ');
                 argarray.splice(0,1);
-                console.log(argarray[0]);
+                // console.log(argarray[0]);
                 globalOBJ.collection.updateOne({userid : 0}, {$set : {notice : argarray[0]}})
                 .then (() => {
                   channel.send("`updated noticeboard`");
