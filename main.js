@@ -249,13 +249,12 @@ client.on('interactionCreate', async interaction => {
         char = "male_teen";
       }
       m1.channel.send(">>> 2 : please enter a username\n```you can use letters, digits, or underscore.\nusername must begin with a letter.\nmust be at least 4 characters long (max. 16).```");
-      let s = "";
       const filter = response => {
         if (response.author != interaction.member.user) {
           return false;
         }
         console.log("called filter2")
-           s = response.content;
+          const s = response.content;
           let check = false; 
           const dictionary = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_";
           const start = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -293,9 +292,9 @@ client.on('interactionCreate', async interaction => {
         return check;
       };
       interaction.channel.awaitMessages({ filter , max: 1, time: 45000, errors: ['time'] })
-        .then (() => {
+        .then (collected => {
           // channel.send(collected.content);
-          const res = s;
+          const res = collected.first().content;
           console.log("username : " + res);
           changeStatus(interaction.member.id, "profile_created");
           globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : 0,char : char, bottom : 'none' , rstatus : 'single', username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here'}})
@@ -340,22 +339,47 @@ client.on('interactionCreate', async interaction => {
 	if (interaction.commandName === 'ping') {
 		await interaction.reply({ content: 'Pong!', ephemeral: 0 });
 	}
-  else if (interaction.commandName === 'quit')
+  else if (interaction.commandName === 'commit')
   {
        if (interaction.member.id === ownerid) 
-          {
-            // channel.send(interaction.member.id);
-            // channel.send(ownerid);
-            interaction.reply("``` shutting down ```");
-            dbClient.close();
-            setTimeout(() => { process.exit(); }, 2000);
+          { 
+            const filter = response => {
+            const s = response.content;
+            console.log(s + " , " + ['quit', 'pin'].includes(s));
+            return (response.author.id == ownerid && ['quit'].includes(s));
+          };
+            interaction.reply("`awaiting further instructions...`");
+
+            channel.awaitMessages({ filter , max: 1, time: 20000, errors: ['time'] })
+            .then (collected => 
+              {
+              if (collected.first().content === 'quit') { //note to self : i missed first().content part before
+              interaction.channel.send("``` shutting down ```")
+              .then (() => {
+              dbClient.close();
+              })
+
+              }
+              else if (collected.first().content.startsWith('pin')) {
+                const argarray = collected.first().content.split('pin ');
+                globalOBJ.collected.updateOne({userid : 0}, {$set : {notice : argarray[1]}})
+                .then (() => {
+                  channel.send("`updated noticeboard`");
+                }
+                )
+              }
+            })
+            .catch(collected => {
+              console.log(collected);
+              channel.send('> no response found ');
+            });
           }
        else
           { 
             // channel.send(interaction.member.id);
             // channel.send(ownerid);
             console.log ("Mismatch ids for staff only cmd : " + interaction.member.id + " vs " + ownerid)
-            interaction.reply("Nice try...");
+            interaction.reply("Nope.");
           }
   }
   else if(interaction.commandName === 'help')
