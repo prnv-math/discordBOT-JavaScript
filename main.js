@@ -92,14 +92,6 @@ async function getStatus(uid) {
   catch{
     return 'no status';
   }
-  // if (res[0] == undefined)
-  //   {return 0;}
-  // if (res[0]['status'] != undefined) 
-  // {
-  //   globalOBJ.status = res[0]['status']; 
-  //   return res[0]['status'];
-  // }
-  // else return 'x';
 }
 
 async function getGameid(uid) {
@@ -572,7 +564,7 @@ client.on('interactionCreate', async interaction => {
         // },
         {
           name : 'relationship',
-          value : 'single',
+          value : relationshipstatus
           
 
         },
@@ -590,12 +582,58 @@ client.on('interactionCreate', async interaction => {
         interaction.reply('`error loading item values & images`')
     }
   }
+  else if (interaction.commandName === 'hashtag'){
+    const option = interaction.options.get("text").value;
+    console.log(option+typeof(option))
+    let check = false;
+    const dictionary = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_";
+    const start = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    for (i in start) {
+      if (option.startsWith(start[i])) {
+        console.log("option starts with /" + start[i] +"/")
+        check = 1;
+      }
+    }
+    const arr = dictionary.split('');
+        for (j in option) {
+            if (arr.includes(option[j]) === false)
+            { 
+              if(check == true) {
+                interaction.reply("`aborting`")
+              }
+              channel.send("`invalid character detected`")
+              check = 0;
+              break;
+            }
+        }
+    if (option.length < 2) {
+            if(check == true) {
+               interaction.reply("`aborting`")
+            }
+            channel.send("`insufficient length`");
+            check = 0;
+        }
+    if (option.length > 16) {
+          if(check == true) {
+            interaction.reply("`aborting`")
+          }
+          channel.send("`maximum length is 16 characters.`");
+          check = 0;
+        }
+    if (check == true)
+      {
+      globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {tag : `#${option}`}})
+      .then (() => {
+      interaction.reply(`\`hashtag updated [${option}]\``);  
+      })
+    }
+
+  }
   else if (interaction.commandName === 'noticeboard') {
     const res = await globalOBJ.collection.find({userid : 0}).toArray();
     console.log (res)
     interaction.reply(`\`\`\`${res[0]['notice']}\`\`\``);
   }
 });
-
 
 client.login(config.BOT_TOKEN);

@@ -1,47 +1,34 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 const token = require('./config.json');
-const fs = require('fs');
 
-const commands = [];
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-const ggdeploy = 0;
-
-// Place your client and guild ids here
 const clientId = '935781313028435998';
 const guildId = '936702937139392633';
 
-for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
-	commands.push(command.data.toJSON());
-}
+console.log(clientId,guildId)
 
-// const rest = new REST({ version: '9' }).setToken(token.BOT_TOKEN);
-//---------------------------------------------------------------------
+const commands = [
+	new SlashCommandBuilder().setName('ping').setDescription('Replies with pong!'),
+	new SlashCommandBuilder().setName('server').setDescription('Replies with server info!'),
+	new SlashCommandBuilder().setName('user').setDescription('Replies with user info!'),
+	new SlashCommandBuilder().setName('commit').setDescription('staff only command.'),
+    new SlashCommandBuilder().setName('help').setDescription('Replies with helpful information for you!'),
+    new SlashCommandBuilder().setName('start').setDescription('create an account in Disco-Life!'),
+    new SlashCommandBuilder().setName('profile').setDescription('View your Disco-Life profile.'),
+	new SlashCommandBuilder().setName('rules').setDescription('Disco-Life rules.'),
+	new SlashCommandBuilder().setName('gameplayinfo').setDescription('seek general gameplay guidelines.'),
+	new SlashCommandBuilder().setName('noticeboard').setDescription('noticeboard for latest game information!'),
+	new SlashCommandBuilder().setName('hashtag').setDescription("let people know how you're feeling!").addStringOption(option => 
+		option.setName('text')
+		.setDescription('type in a text! no need to use #. (most username rules apply to hashtags)')
+		.setRequired(true)
+		),
+]
+	.map(command => command.toJSON());
 
-(async () => {
-	try {
-		console.log('Started refreshing application (/) commands.');
+const rest = new REST({ version: '9' }).setToken(token.BOT_TOKEN);
 
-		if (ggdeploy = 0) 
-		{
-		await rest.put
-		(
-			Routes.applicationGuildCommands(clientId, guildId),
-			{ body: commands },
-		);
-		}
-		else {
-		await rest.put
-		(
-			Routes.applicationGuildCommands(clientId, guildId),
-			{ body: commands },
-		);
-
-		}
-
-		console.log('Successfully reloaded application (/) commands.');
-	} catch (error) {
-		console.error("[ ERROR ] " + error);
-	}
-})();
+rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands })
+	.then(() => console.log('Successfully registered application commands.'))
+	.catch(console.error);
