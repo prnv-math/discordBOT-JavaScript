@@ -372,7 +372,7 @@ client.on('interactionCreate', async interaction => {
                 globalOBJ.collection.updateOne({userid : 0}, {$set : {notice : argarray[0]}})
                 .then (() => {
                   channel.send("`updated noticeboard`");
-                  client.channels.cache.get('936801672984920116').send("`" + argarray[0] + "`")
+                  client.channels.cache.get('936801672984920116').send(`\`${argarray[0]}\``)
                 }
                 )
                 .catch(collected => {
@@ -593,7 +593,7 @@ client.on('interactionCreate', async interaction => {
   else if (interaction.commandName === 'noticeboard') {
     const res = await globalOBJ.collection.find({userid : 0}).toArray();
     console.log (res)
-    interaction.reply("`" +res[0]['notice']+"`");
+    interaction.reply(`\`\`\`${res[0]['notice']}\`\`\``);
   }
 });
 
