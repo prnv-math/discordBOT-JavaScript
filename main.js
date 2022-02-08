@@ -2,7 +2,9 @@
 const discord = require("discord.js");
 const config = require("./config.json");
 
-var jimp = require('jimp');
+const humanizeDuration = require('humanize-duration');
+const cd = new Map();
+const jimp = require('jimp');
 
 const { MongoClient } = require('mongodb');
 const { FONT_SANS_10_BLACK } = require("jimp");
@@ -48,7 +50,7 @@ async function dbmain()
   // globalOBJ.collection.deleteMany({});
   globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
-  globalOBJ.collection.updateOne({userid:ownerid}, {$set : {likes: 35,bottom : 'none' , rstatus : 'single', username : 'cass',level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here'}})
+  // globalOBJ.collection.updateOne({userid:ownerid}, {$set : {likes: 35,bottom : 'none' , rstatus : 'single', username : 'cass',level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here'}})
  
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
  
@@ -409,7 +411,7 @@ client.on('interactionCreate', async interaction => {
     }
     
 
-    em(":bookmark: Profile commands :bookmark:", ["start", "profile", "attributes", "boosts", "events", "like", "inventory", "hashtag","cooldowns"])
+    em(":bookmark: Profile commands :bookmark:", ["start", "profile", "attributes", "boosts", "events", "like", "inventory", "hashtagset","cooldowns"])
     em(":beginner: Menu commands :beginner:", ["bank", "shop", "jobs", "education", "health", "apartments", "relationship"])
     em(":gift: Rewards commands :gift:", ["daily", "weekly", "votetrend", "checkin", "redeem", "quiz"])
     em(":currency_exchange: Interaction commands :currency_exchange:", ["mail", "give", "phone"])
@@ -582,8 +584,12 @@ client.on('interactionCreate', async interaction => {
         interaction.reply('`error loading item values & images`')
     }
   }
-  else if (interaction.commandName === 'hashtag'){
-    const option = interaction.options.get("text").value;
+  else if (interaction.commandName === 'hashtagset'){
+    const cdhash = cd.get('hashtag');
+    console.log(cdhash);
+    if (cdhash == undefined)
+    {
+    const option = interaction.options.get("hashtag").value;
     console.log(option+typeof(option))
     let check = false;
     const dictionary = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_";
@@ -624,8 +630,16 @@ client.on('interactionCreate', async interaction => {
       {
       globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {tag : `#${option}`}})
       .then (() => {
-      interaction.reply(`\`hashtag updated [${option}]\``);  
+      interaction.reply(`\`hashtag updated [${option}]\``); 
+      cd.set('hashtag', Date.now() + (60000*60));
+      setTimeout(() => cd.delete('hashtag'), 60000*60);
       })
+    }
+    }
+    else {
+      const remaining = humanizeDuration(cdhash - Date.now(), { largest: 1 });
+      return interaction.reply("`You have to wait "+ remaining +" before you can change it again`")
+      .catch (console.error);
     }
 
   }

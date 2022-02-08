@@ -19,8 +19,8 @@ const commands = [
 	new SlashCommandBuilder().setName('rules').setDescription('Disco-Life rules.'),
 	new SlashCommandBuilder().setName('gameplayinfo').setDescription('seek general gameplay guidelines.'),
 	new SlashCommandBuilder().setName('noticeboard').setDescription('noticeboard for latest game information!'),
-	new SlashCommandBuilder().setName('hashtag').setDescription("let people know how you're feeling!").addStringOption(option => 
-		option.setName('text')
+	new SlashCommandBuilder().setName('hashtagset').setDescription("let people know how you're feeling!").addStringOption(option => 
+		option.setName('hashtag')
 		.setDescription('type in a text! no need to use #. (most username rules apply to hashtags)')
 		.setRequired(true)
 		),
