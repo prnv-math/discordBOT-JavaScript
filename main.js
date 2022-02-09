@@ -3,6 +3,7 @@ const discord = require("discord.js");
 const config = require("./config.json");
 
 const humanizeDuration = require('humanize-duration');
+const random_name = require('node-random-name');
 const cd = new Map();
 const jimp = require('jimp');
 
@@ -51,8 +52,8 @@ async function dbmain()
   await globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
   // await globalOBJ.collection.updateOne({userid :ownerid}, {$set : {inventory : {coins : 9999, bank : 9999}}});
-  // globalOBJ.collection.updateOne({userid:ownerid}, {$set : {likes: 35,bottom : 'none' , rstatus : 'single', username : 'cass',level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here'}})
- 
+  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}]}})
+
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
  
   // userid = 0 = bot details
@@ -284,7 +285,9 @@ client.on('interactionCreate', async interaction => {
           const res = collected.first().content;
           console.log("username : " + res);
           changeStatus(interaction.member.id, "profile_created");
-          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : 0,char : char, bottom : 'none' , rstatus : 'single', username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here'}})
+          const dad = random_name({gender : 'male'});
+          const mom = random_name({last : false,gender : "female"});
+          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : 0,char : char, bottom : 'none' , relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : dad}, {_id : 3, info : 'mother', strength : 0, playerid : 0 , name : mom}], username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here'}})
           .then (() => {
           channel.send('`[success] profile created for ' + res + '`\n`try out other commands or use /help`');
           });
@@ -332,7 +335,7 @@ client.on('interactionCreate', async interaction => {
           { 
             const filter = response => {
             const s = response.content.split(' ', 1)[0];
-            console.log(s + " , " + ['quit', 'pin'].includes(s));
+            // console.log(s + " , " + ['quit', 'pin'].includes(s));
             return (response.author.id == ownerid && ['quit', 'pin'].includes(s));
           };
             interaction.reply("`awaiting further instructions...`");
@@ -355,7 +358,12 @@ client.on('interactionCreate', async interaction => {
                 let argarray = collected.first().content.split('pin ');
                 argarray.splice(0,1);
                 // console.log(argarray[0]);
-                globalOBJ.collection.updateOne({userid : 0}, {$set : {notice : argarray[0]}})
+                globalOBJ.collection.find({userid:0}).toArray()
+                .then (collected => {
+                const res = collected;
+                const pin = res[0]['notice'];
+                const today = new Date().toLocaleDateString()
+                globalOBJ.collection.updateOne({userid : 0}, {$set : {notice : [pin[1], pin[2], "[" + today + "]\n" + argarray[0]]}})
                 .then (() => {
                   channel.send("`updated noticeboard`");
                   client.channels.cache.get('936801672984920116').send(`\`${argarray[0]}\``)
@@ -363,6 +371,7 @@ client.on('interactionCreate', async interaction => {
                 )
                 .catch(collected => {
                   channel.send("`err`");
+                })
                 })
               }
             })
@@ -405,7 +414,7 @@ client.on('interactionCreate', async interaction => {
 
     em(":bookmark: Profile commands :bookmark:", ["start", "profile", "attributes", "boosts", "events", "like", "inventory", "hashtagset","cooldowns"])
     em(":beginner: Menu commands :beginner:", ["bank", "shop", "jobs", "education", "health", "apartments", "relationship"])
-    em(":gift: Rewards commands :gift:", ["dailyreward", "todolist", "votetrend", "fashion", "redeem", "quiz"])
+    em(":gift: Rewards commands :gift:", ["dailyreward", "todolist", "votetrend", "redeem", "quiz"])
     em(":currency_exchange: Interaction commands :currency_exchange:", ["mail", "give", "chatrooms"])
     em(":diamonds: Misc commands :diamonds:", ["support", "gameplayinfo", "rules", "noticeboard", "invite","sos"])
 
@@ -501,7 +510,8 @@ client.on('interactionCreate', async interaction => {
       const pet = res[0]['favpet'];
       const tag = res[0]['tag'];
       const likes = res[0]['likes'];
-      const relationshipstatus = res[0]['rstatus'];
+      const relationshipstatus = res[0]['relationship'];
+
       const level = res[0]['level'];
       const username = res[0]['username'];
       // channel.send("`profile of "+username+"`");
@@ -564,7 +574,7 @@ client.on('interactionCreate', async interaction => {
         // },
         {
           name : 'relationship',
-          value : relationshipstatus
+          value : relationshipstatus[0]['info']
           
 
         },
@@ -643,8 +653,8 @@ client.on('interactionCreate', async interaction => {
   }
   else if (interaction.commandName === 'noticeboard') {
     const res = await globalOBJ.collection.find({userid : 0}).toArray();
-    console.log (res)
-    interaction.reply(`\`\`\`${res[0]['notice']}\`\`\``);
+    const notice = res[0]['notice'];
+    interaction.reply(">>> " +notice[0] +"\n"+ notice[1] + "\n"+ notice[2]);
   }
   else {
     interaction.reply('`work in progress :(`');
