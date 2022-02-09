@@ -48,8 +48,9 @@ async function dbmain()
   globalOBJ.collection = db.collection('documents');
   
   // globalOBJ.collection.deleteMany({});
-  globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
+  await globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
+  // await globalOBJ.collection.updateOne({userid :ownerid}, {$set : {inventory : {coins : 9999, bank : 9999}}});
   // globalOBJ.collection.updateOne({userid:ownerid}, {$set : {likes: 35,bottom : 'none' , rstatus : 'single', username : 'cass',level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here'}})
  
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
@@ -100,8 +101,7 @@ async function getGameid(uid) {
 
   let res = await globalOBJ.collection.find({userid:uid}).toArray();
   
-  try {
-    // globalOBJ.gameid = res[0]['gameid']; 
+  try { 
     return res[0]['gameid'];
   }
   catch{
@@ -114,7 +114,6 @@ async function getGameid(uid) {
   // }
   // if (res[0]['gameid'] != undefined) 
   // { 
-  //   globalOBJ.gameid = res[0]['gameid']; 
   //   return res[0]['gameid'];
   // }
   // else return 0;
@@ -132,9 +131,6 @@ async function createUser(uid) {
 
  console.log('newUserid : ' + res[0]['gameid'] + " , newbotgameid : " + (g+2));
 //  console.log('new entry status :  '+newENtry[0]['status']);
- globalOBJ.gameid = res[0]['gameid'];
- console.log('globalobj newusergameid :' + globalOBJ.gameid);
- globalOBJ.status = res[0]['status'];
  }
  else 
  {
@@ -177,11 +173,7 @@ client.on('interactionCreate', async interaction => {
 
   
   // ==============
-  async function jimpLoad()
-  {
-    
-    return imgbuf;
-  }
+
   async function customizepfp() {
     
   //  Take image from URL , and generate a buffer for it. 
@@ -413,8 +405,8 @@ client.on('interactionCreate', async interaction => {
 
     em(":bookmark: Profile commands :bookmark:", ["start", "profile", "attributes", "boosts", "events", "like", "inventory", "hashtagset","cooldowns"])
     em(":beginner: Menu commands :beginner:", ["bank", "shop", "jobs", "education", "health", "apartments", "relationship"])
-    em(":gift: Rewards commands :gift:", ["daily", "weekly", "votetrend", "checkin", "redeem", "quiz"])
-    em(":currency_exchange: Interaction commands :currency_exchange:", ["mail", "give", "phone"])
+    em(":gift: Rewards commands :gift:", ["dailyreward", "todolist", "votetrend", "fashion", "redeem", "quiz"])
+    em(":currency_exchange: Interaction commands :currency_exchange:", ["mail", "give", "chatrooms"])
     em(":diamonds: Misc commands :diamonds:", ["support", "gameplayinfo", "rules", "noticeboard", "invite","sos"])
 
     await interaction.reply({ embeds: [e] });
@@ -456,11 +448,17 @@ client.on('interactionCreate', async interaction => {
       const reaction = collected.first();
   
       if (reaction.emoji.name === emo) {
-        createUser(interaction.member.id)
+        const today = new Date().toLocaleDateString();
+        const message = `Hello ${message.author.name}.\nI am someone with a secret identity. And apparently you are a new volunteer for our project Disco-Life.\nNow we intend to observe how you live in Disco-Verse. I guess time will tell how this will turn out , right? i hope you are ready!\n\u200B\n\u200B\n`;
+        const embb = emb("[New] Text Message ", `\`${today}\`` + "\n\n" + msg);
+        emb.setAuthor("agent Disco", "https://i.imgur.com/Livii3I.jpg");
+        const reward = (Math.floor(Math.random() * 12) + 2) * 20;
+        emb.setFooter(`\$${reward} credited to bank`);
+        channel.send ({embeds : [embb]})
+        .then(() => createUser(interaction.member.id))
+        .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {coins : 0, bank : reward}}}))
         .then (() => {
-        // channel.send("`[game id : " + + globalOBJ.gameid +']`');
         customizepfp(interaction);
-        // });
         });
       }
     })
@@ -586,7 +584,7 @@ client.on('interactionCreate', async interaction => {
   }
   else if (interaction.commandName === 'hashtagset'){
     const cdhash = cd.get('hashtag');
-    console.log(cdhash);
+    // console.log(cdhash);
     if (cdhash == undefined)
     {
     const option = interaction.options.get("hashtag").value;
@@ -647,6 +645,9 @@ client.on('interactionCreate', async interaction => {
     const res = await globalOBJ.collection.find({userid : 0}).toArray();
     console.log (res)
     interaction.reply(`\`\`\`${res[0]['notice']}\`\`\``);
+  }
+  else {
+    interaction.reply('`work in progress :(`');
   }
 });
 
