@@ -287,7 +287,7 @@ client.on('interactionCreate', async interaction => {
           changeStatus(interaction.member.id, "profile_created");
           const dad = random_name({gender : 'male'});
           const mom = random_name({last : false,gender : "female"});
-          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : 0,char : char, bottom : 'none' , relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : dad}, {_id : 3, info : 'mother', strength : 0, playerid : 0 , name : mom}], username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here', attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30} , skills : [{_id : 1, name : 'none', profiency : 0},{_id : 2,name : 'none', profiency : 0},{_id : 3,name : 'none', profiency : 0}]}})
+          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : 0,char : char, bottom : 'none' , relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : dad}, {_id : 3, info : 'mother', strength : 0, playerid : 0 , name : mom}], username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here', attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}}})
           .then (() => {
           channel.send('`[success] profile created for ' + res + '`\n`try out other commands or use /help`');
           });
@@ -309,23 +309,28 @@ client.on('interactionCreate', async interaction => {
   }
 
   if (!interaction.isCommand()) return;
-  // console.log(interaction.toString())
-  // console.log(interaction)
+  
   const checkusr = await getGameid(interaction.member.id);
   console.log('checkuser = ' + checkusr);
-  if ((checkusr < 0) && ((interaction.commandName != 'start') && (interaction.commandName != 'help')) && (interaction.member.id != ownerid))
+  if ((interaction.commandName != 'start') && (interaction.commandName != 'help') && (interaction.member.id != ownerid))
   {
+    if (checkusr < 0)
+    {
     // try {
       // console.log("trigger user check in db");
         //note to self : CHECK THIS and the checkuser thing to see if theyre using profile mid acc creation
 
         interaction.reply("You are a new face! Check out `"+prefix+" help` or `"+prefix+" start` <@" + interaction.member.id + ">");
         return;
-      
-        // else {
-      //   console.log(checkusr + 'is existing user');
-        
-      // }
+    } 
+    else {
+
+        const status = await getStatus(interaction.member.id);
+        if(status == 'agreed') {
+          interaction.reply("`please complete your profile creation`");
+          return;
+        }
+    }
   }
 	if (interaction.commandName === 'ping') {
 		await interaction.reply({ content: 'Pong!', ephemeral: 0 });
@@ -459,12 +464,24 @@ client.on('interactionCreate', async interaction => {
   
       if (reaction.emoji.name === emo) {
         const today = new Date().toLocaleDateString();
-        const message = `Hello ${message.author.name}.\nI am someone with a secret identity. And apparently you are a new volunteer for our project Disco-Life.\nNow we intend to observe how you live in Disco-Verse. I guess time will tell how this will turn out , right? i hope you are ready!\n\u200B\n\u200B\n`;
-        const embb = emb("[New] Text Message ", `\`${today}\`` + "\n\n" + msg);
-        emb.setAuthor("agent Disco", "https://i.imgur.com/Livii3I.jpg");
+        const intro = `Hello ${interaction.member.user.name}.\nI am someone with a secret identity. And apparently you are a new volunteer for our project Disco-Life.\nNow we intend to observe how you live in Disco-Verse. I guess time will tell how this will turn out , right? i hope you are ready!\n\u200B\n\u200B\n`;
+        const embb = emb("[New] Text Message ", `\`${today}\`` + "\n\n" + intro);
+        
+        embb.setAuthor({
+          name: 'agent Disco',
+          url: '',
+          iconURL: 'https://i.imgur.com/Livii3I.jpg'
+      });
         const reward = (Math.floor(Math.random() * 12) + 2) * 20;
-        emb.setFooter(`\$${reward} credited to bank`);
+        embb.setFooter({
+        text : `\$${reward} credited to bank`
+        });
         channel.send ({embeds : [embb]})
+        .then(collected => {
+          collected.react('👍');
+          collected.awaitReactions({ filter, max: 1, time: 25000, errors: ['time'] });
+        })
+        
         .then(() => createUser(interaction.member.id))
         .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {coins : 0, bank : reward}, designation : {name : 'Student' , startedAt : today}}}))
         .then (() => {
