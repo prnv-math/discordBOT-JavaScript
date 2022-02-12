@@ -610,6 +610,15 @@ client.on('interactionCreate', async interaction => {
         interaction.reply('`error loading item values & images`')
     }
   }
+  else if (interaction.commandName == 'attributes'){
+    const res = await globalOBJ.collection.find({userid : interaction.member.id}).toArray();
+    let embedd = emb(Attributes, "`all values for different attributes represent percentage values, or the ratio of current value to maximum value.`"); 
+    embedd.setAuthor({
+      name: res[0]['username'],
+      url: '',
+      iconURL: 'https://i.imgur.com/cweJrD0.png'
+    })
+  }
   else if (interaction.commandName === 'hashtagset'){
     const cdhash = cd.get('hashtag');
     // console.log(cdhash);
