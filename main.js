@@ -52,7 +52,7 @@ async function dbmain()
   await globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
   // await globalOBJ.collection.updateOne({userid :ownerid}, {$set : {inventory : {coins : 9999, bank : 9999}}});
-  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}]}})
+  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now() - (60000*60*36)}})
 
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
  
@@ -159,6 +159,28 @@ client.on('interactionCreate', async interaction => {
 	
   let e = {};
   const channel=interaction.channel;
+
+  function checkHunger() {
+    globalOBJ.collection.find({userid:interaction.member.id}).toArray()
+    .then (collected => {
+    const res = collected;
+    const attr = res[0]['attributes'];
+    const lastfed = res[0]['lastfed'];
+    const pers = ((((Date.now() - lastfed) / 1000)/60) / 1440) * 100;
+    console.log(pers + " , hours passed since lastfed : " + Math.floor(((Date.now() - lastfed)/1000)/60));
+    if (attr['hunger']+pers > 100) {
+      console.log(res[0]['username'] + ' is starving');
+      const excess = (Math.floor(attr['hunger']+pers-100)/500)*100;
+      if (excess > 500)
+        interaction.reply("`maximum starvation`")
+        .then (() => {
+        return;
+        });
+    }
+
+    });
+  }
+  checkHunger();
 
   function emb(t,desc="", col = 0x3AABC2) 
   {
@@ -287,7 +309,7 @@ client.on('interactionCreate', async interaction => {
           changeStatus(interaction.member.id, "profile_created");
           const dad = random_name({gender : 'male'});
           const mom = random_name({last : false,gender : "female"});
-          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : 0,char : char, bottom : 'none' , relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : dad}, {_id : 3, info : 'mother', strength : 0, playerid : 0 , name : mom}], username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here', attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}}})
+          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : 0,char : char, bottom : 'none' , relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : dad}, {_id : 3, info : 'mother', strength : 0, playerid : 0 , name : mom}], username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here', attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now()}})
           .then (() => {
           channel.send('`[success] profile created for ' + res + '`\n`try out other commands or use /help`');
           });
@@ -612,12 +634,36 @@ client.on('interactionCreate', async interaction => {
   }
   else if (interaction.commandName == 'attributes'){
     const res = await globalOBJ.collection.find({userid : interaction.member.id}).toArray();
-    let embedd = emb(Attributes, "`all values for different attributes represent percentage values, or the ratio of current value to maximum value.`"); 
+    let embedd = emb('Attributes', "`all values for different attributes represent percentage values, of current value with respect to maximum value.`"); 
     embedd.setAuthor({
       name: res[0]['username'],
       url: '',
-      iconURL: 'https://i.imgur.com/cweJrD0.png'
+      iconURL: 'https://i.imgur.com/OQDEElj.jpg'
     })
+    const att = res[0]['attributes'];
+    for (const [key, value] of Object.entries(att)) {
+       if (key != 'hunger')
+        embedd.addField("\u200B"+ key,"\u200B"+value,true);
+       else 
+        { 
+          const lastfed = res[0]['lastfed'];
+          let pers = ((((Date.now() - lastfed) / 1000)/60) / 1440) * 100;
+          // console.log(pers + " , mins passed since lastfed : " + Math.floor(((Date.now() - lastfed)/1000)/60));
+          if (value+pers <= 100) {
+            embedd.addField("\u200B"+ key,"\u200B"+Math.floor(value+pers),true);
+          }
+          else {
+            const excess = (Math.floor(value+pers-100)/500)*100;
+            if (excess <= 500)
+              embedd.addField("\u200B"+ 'starving',"\u200B"+Math.floor(excess),true);
+            else {
+              interaction.reply("`maximum strvation`");
+              return;
+                 }
+          }
+        }
+      }
+    interaction.reply({embeds : [embedd]});
   }
   else if (interaction.commandName === 'hashtagset'){
     const cdhash = cd.get('hashtag');
