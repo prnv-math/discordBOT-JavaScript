@@ -38,6 +38,7 @@ const commands = [
 			)
 	,
 	new SlashCommandBuilder().setName('inventory').setDescription('See what is in your inventory'),
+	new SlashCommandBuilder().setName('bank').setDescription('manage your bank account.'),
 ]
 	.map(command => command.toJSON());
 

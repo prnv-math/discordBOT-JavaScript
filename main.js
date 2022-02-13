@@ -47,11 +47,9 @@ async function dbmain()
   const db = dbClient.db(dbName);
   globalOBJ.collection = db.collection('documents');
   
-  // globalOBJ.collection.deleteMany({});
   await globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
-  // await globalOBJ.collection.updateOne({userid :ownerid}, {$set : {inventory : {cash : 9999, bank : 9999}}});
-  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : { relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
+  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : { designation : [['student', Date.now()]], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
    dates : {lastfed : Date.now() - (60000*60*36), hashtag : undefined}, boosts:{cash : 1, hunger : 1, experience : 1} }});
 
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
@@ -84,10 +82,7 @@ function deluser(uid) {
 // deluser(ownerid);
 
 async function getStatus(uid) {
-  // console.log("whole collection : ");
-  // globalOBJ.collection.find().toArray();
   let res = await globalOBJ.collection.find({userid:uid}).toArray();
-  console.log("get status res : " + res[0]['status']);
  
   try {
     // globalOBJ.status = res[0]['status']; 
@@ -151,28 +146,6 @@ client.on('interactionCreate', async interaction => {
 	
   let e = {};
   const channel=interaction.channel;
-
-  function checkHunger() {
-    globalOBJ.collection.find({userid:interaction.member.id}).toArray()
-    .then (collected => {
-    const res = collected;
-    const attr = res[0]['attributes'];
-    const lastfed = (res[0]['dates'])['lastfed'];
-    const pers = ((((Date.now() - lastfed) / 1000)/60) / 1440) * 100;
-    console.log(pers + " , hours passed since lastfed : " + Math.floor(((Date.now() - lastfed)/1000)/60));
-    if (attr['hunger']+pers > 100) {
-      console.log(res[0]['username'] + ' is starving');
-      const excess = (Math.floor(attr['hunger']+pers-100)/500)*100;
-      if (excess >= 100)
-        interaction.reply("`your character is about to die from starvation [game over]` <@" + interaction.member.id + ">")
-        .then (() => {
-        return;
-        });
-    }
-
-    });
-  }
-  checkHunger();
 
   function emb(t,desc="", col = 0x3AABC2) 
   {
@@ -330,6 +303,26 @@ client.on('interactionCreate', async interaction => {
   if (!interaction.isCommand()) return;
   
   const checkusr = await getGameid(interaction.member.id);
+  function checkHunger() {
+    globalOBJ.collection.find({userid:interaction.member.id}).toArray()
+    .then (collected => {
+    const res = collected;
+    const attr = res[0]['attributes'];
+    const lastfed = (res[0]['dates'])['lastfed'];
+    const pers = ((((Date.now() - lastfed) / 1000)/60) / 1440) * 100;
+    console.log(pers + " , hours passed since lastfed : " + Math.floor(((Date.now() - lastfed)/1000)/60));
+    if (attr['hunger']+pers > 100) {
+      console.log(res[0]['username'] + ' is starving');
+      const excess = (Math.floor(attr['hunger']+pers-100)/500)*100;
+      if (excess >= 100)
+        interaction.reply("`your character is about to die from starvation [game over]` <@" + interaction.member.id + ">")
+        .then (() => {
+        return;
+        });
+    }
+
+    });
+  }
   console.log('checkuser = ' + checkusr);
   if ((interaction.commandName != 'start') && (interaction.commandName != 'help') && (interaction.member.id != ownerid))
   {
@@ -348,6 +341,9 @@ client.on('interactionCreate', async interaction => {
         if(status == 'agreed') {
           interaction.reply("`please complete your profile creation`");
           return;
+        }
+        else {
+          checkHunger();
         }
     }
   }
@@ -502,7 +498,7 @@ client.on('interactionCreate', async interaction => {
         })
         
         .then(() => createUser(interaction.member.id))
-        .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {cash : 0, bank : reward}, designation : 'Student'}}))
+        .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {cash : 0, bank : reward}, designation : [['student', Date.now()]]}}))
         .then (() => {
         customizepfp(interaction);
         });
@@ -603,7 +599,7 @@ client.on('interactionCreate', async interaction => {
       },
         {
           name : 'designation',
-          value : res[0]['designation'].toLowerCase(),
+          value : (res[0]['designation'])[0][0],
           
         },
         // {
@@ -631,6 +627,9 @@ client.on('interactionCreate', async interaction => {
   }
   else if (interaction.commandName == 'attributes'){
     const res = await globalOBJ.collection.find({userid : interaction.member.id}).toArray();
+    // console.log((res[0]['dates'])['lastfed'])
+    // const d = new Date((res[0]['dates'])['lastfed']);
+    // console.log(d);
     let embedd = emb('Attributes', "`all values for different attributes represent percentage values, of current value with respect to maximum value.`"); 
     embedd.setAuthor({
       name: res[0]['username'],
@@ -755,7 +754,7 @@ client.on('interactionCreate', async interaction => {
           else 
           {
           await globalOBJ.collection.updateOne({userid : mention.id} , {$push : {likes :interaction.member.id}});
-          interaction.reply("`You gave a like to " + res[0]['username'] + " [total likes : " + (res[0]['likes']).length + "]`");
+          interaction.reply("`You gave a like to " + res[0]['username'] + " [total likes : " + (res[0]['likes']).length + 1 + "]`");
           }
         }
       }
@@ -810,6 +809,19 @@ client.on('interactionCreate', async interaction => {
       txt += "\nno items";
     embedd.setDescription(txt);
     embedd.setFooter({ text :"cash in hand : $" + (res[0]['inventory'])['cash'] + ", cash at bank : $" + (res[0]['inventory'])['bank']})
+    interaction.reply({embeds : [embedd]});
+  }
+  else if (interaction.commandName == 'bank') {
+    const res = await globalOBJ.collection.find({userid:interaction.member.id}).toArray();
+    let embedd = emb("Account holder : " + res[0]['username']);
+    // embedd.setAuthor ({
+    //   name : 'BANK' ,
+    //   url : '',
+    //   iconURL : 'https://i.imgur.com/RMUkwmM.jpg'
+    //   });
+    embedd.setThumbnail("https://i.imgur.com/HVbosG1.jpg");
+    let txt = "account balance : " + (res[0]['inventory'])['bank'];
+    embedd.setDescription(txt);
     interaction.reply({embeds : [embedd]});
   }
   else {
