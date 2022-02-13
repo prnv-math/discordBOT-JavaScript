@@ -4,7 +4,6 @@ const config = require("./config.json");
 
 const humanizeDuration = require('humanize-duration');
 const random_name = require('node-random-name');
-const cd = new Map();
 const jimp = require('jimp');
 
 const { MongoClient } = require('mongodb');
@@ -52,7 +51,8 @@ async function dbmain()
   await globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
   // await globalOBJ.collection.updateOne({userid :ownerid}, {$set : {inventory : {cash : 9999, bank : 9999}}});
-  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {likes : [], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now() - (60000*60*36), boosts:{cash : 1, hunger : 1, experience : 1} }})
+  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : { relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
+   dates : {lastfed : Date.now() - (60000*60*36), hashtag : undefined}, boosts:{cash : 1, hunger : 1, experience : 1} }});
 
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
  
@@ -157,7 +157,7 @@ client.on('interactionCreate', async interaction => {
     .then (collected => {
     const res = collected;
     const attr = res[0]['attributes'];
-    const lastfed = res[0]['lastfed'];
+    const lastfed = (res[0]['dates'])['lastfed'];
     const pers = ((((Date.now() - lastfed) / 1000)/60) / 1440) * 100;
     console.log(pers + " , hours passed since lastfed : " + Math.floor(((Date.now() - lastfed)/1000)/60));
     if (attr['hunger']+pers > 100) {
@@ -306,7 +306,7 @@ client.on('interactionCreate', async interaction => {
           changeStatus(interaction.member.id, "profile_created");
           const dad = random_name({gender : 'male'});
           const mom = random_name({last : false,gender : "female"});
-          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : [],char : char, bottom : 'none' , relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : dad}, {_id : 3, info : 'mother', strength : 0, playerid : 0 , name : mom}], username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here', attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now(), boosts:{cash : 1, hunger : 1, experience : 1} }})
+          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : [],char : char, bottom : 'none' , relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : dad}, {_id : 3, info : 'mother', strength : 0, playerid : 0 , name : mom}], username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', tag : '#new_around_here', attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, dates : {lastfed : Date.now(), hashtag : undefined}, boosts:{cash : 1, hunger : 1, experience : 1} }})
           .then (() => {
           channel.send('`[success] profile created for ' + res + '`\n`try out other commands or use /help`');
           });
@@ -643,7 +643,7 @@ client.on('interactionCreate', async interaction => {
         embedd.addField("\u200B"+ key,"\u200B"+value,true);
        else 
         { 
-          const lastfed = res[0]['lastfed'];
+          const lastfed = (res[0]['dates'])['lastfed'];
           let pers = ((((Date.now() - lastfed) / 1000)/60) / 1440) * 100;
           // console.log(pers + " , mins passed since lastfed : " + Math.floor(((Date.now() - lastfed)/1000)/60));
           if (value+pers <= 100) {
@@ -657,7 +657,8 @@ client.on('interactionCreate', async interaction => {
     interaction.reply({ embeds : [embedd]});
   }
   else if (interaction.commandName === 'hashtagset'){
-    const cdhash = cd.get('hashtag');
+    const res = await globalOBJ.collection.find({userid : interaction.member.id}).toArray();
+    const cdhash = (res[0]['dates'])['hashtag'];
     // console.log(cdhash);
     if (cdhash == undefined)
     {
@@ -702,9 +703,8 @@ client.on('interactionCreate', async interaction => {
       {
       globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {tag : `#${option}`}})
       .then (() => {
-      interaction.reply(`\`hashtag updated [${option}]\``); 
-      cd.set('hashtag', Date.now() + (60000*60));
-      setTimeout(() => cd.delete('hashtag'), 60000*60);
+      globalOBJ.collection.updateOne({userid : interaction.member.id},{$set : {'dates.hashtag' : Date.now() + (60000*60)}} )
+      .then (() => { interaction.reply(`\`hashtag updated [${option}]\``); });
       })
     }
     }
