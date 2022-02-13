@@ -52,7 +52,7 @@ async function dbmain()
   await globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
   // await globalOBJ.collection.updateOne({userid :ownerid}, {$set : {inventory : {coins : 9999, bank : 9999}}});
-  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now() - (60000*60*36)}})
+  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now() - (60000*60*36), boosts:{coins : 1, hunger : 1, experience : 1} }})
 
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
  
@@ -171,8 +171,8 @@ client.on('interactionCreate', async interaction => {
     if (attr['hunger']+pers > 100) {
       console.log(res[0]['username'] + ' is starving');
       const excess = (Math.floor(attr['hunger']+pers-100)/500)*100;
-      if (excess > 500)
-        interaction.reply("`maximum starvation`")
+      if (excess >= 100)
+        interaction.reply("`your character is about to die from starvation [game over]` <@" + interaction.member.id + ">")
         .then (() => {
         return;
         });
@@ -218,7 +218,7 @@ client.on('interactionCreate', async interaction => {
   // =========================================  
     const embb = {
       color: 0x3AABC2,
-      title: interaction.member.name,
+      title: "",
       url: '',
       author: {
         name : interaction.member.user.username,
@@ -309,7 +309,7 @@ client.on('interactionCreate', async interaction => {
           changeStatus(interaction.member.id, "profile_created");
           const dad = random_name({gender : 'male'});
           const mom = random_name({last : false,gender : "female"});
-          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : 0,char : char, bottom : 'none' , relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : dad}, {_id : 3, info : 'mother', strength : 0, playerid : 0 , name : mom}], username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here', attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now()}})
+          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : 0,char : char, bottom : 'none' , relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : dad}, {_id : 3, info : 'mother', strength : 0, playerid : 0 , name : mom}], username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here', attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now(), boosts:{coins : 1, hunger : 1, experience : 1} }})
           .then (() => {
           channel.send('`[success] profile created for ' + res + '`\n`try out other commands or use /help`');
           });
@@ -442,7 +442,7 @@ client.on('interactionCreate', async interaction => {
 
     em(":bookmark: Profile commands :bookmark:", ["start", "profile", "attributes", "boosts", "events", "like", "inventory", "hashtagset","cooldowns"])
     em(":beginner: Menu commands :beginner:", ["bank", "shop", "jobs", "education", "health", "apartments", "relationship"])
-    em(":gift: Rewards commands :gift:", ["dailyreward", "todolist", "votetrend", "redeem", "quiz"])
+    em(":gift: Rewards commands :gift:", ["dailyreward",  "work","todolist","survey", "redeem", "quiz"])
     em(":currency_exchange: Interaction commands :currency_exchange:", ["mail", "give", "chatrooms"])
     em(":diamonds: Misc commands :diamonds:", ["support", "gameplayinfo", "rules", "noticeboard", "invite","sos"])
 
@@ -653,17 +653,11 @@ client.on('interactionCreate', async interaction => {
             embedd.addField("\u200B"+ key,"\u200B"+Math.floor(value+pers),true);
           }
           else {
-            const excess = (Math.floor(value+pers-100)/500)*100;
-            if (excess <= 500)
-              embedd.addField("\u200B"+ 'starving',"\u200B"+Math.floor(excess),true);
-            else {
-              interaction.reply("`maximum strvation`");
-              return;
-                 }
+            embedd.addField("\u200B"+ 'starving',"\u200B"+Math.floor(((value+pers-100)/500)*100),true);
           }
         }
       }
-    interaction.reply({embeds : [embedd]});
+    interaction.reply({ embeds : [embedd]});
   }
   else if (interaction.commandName === 'hashtagset'){
     const cdhash = cd.get('hashtag');
@@ -728,6 +722,26 @@ client.on('interactionCreate', async interaction => {
     const res = await globalOBJ.collection.find({userid : 0}).toArray();
     const notice = res[0]['notice'];
     interaction.reply(">>> " +notice[0] +"\n"+ notice[1] + "\n"+ notice[2]);
+  }
+  else if (interaction.commandName == 'boosts') 
+  {
+    const res = await globalOBJ.collection.find({userid : interaction.member.id}).toArray();
+    let embedd = emb("", "Each number represents a multiplier for corresponding field. 1 represents 100 % value and that no boosts are present.(`0.5` multiplier for hunger means that your hunger is halved. `2` for coins means that your coin gains are doubled.)");
+    embedd.setAuthor({
+        name : 'Boosts',
+        url : "",
+        iconURL : 'https://i.imgur.com/tXBPtW5.jpg'
+      });
+    
+    for (const [key,value] of Object.entries(res[0]['boosts']))
+      {
+        embedd.addField("\u200B"+ key,"\u200B"+value);
+      }
+    interaction.reply({embeds : [embedd]});
+
+  }
+  else if (interaction.commandName == 'like'){
+
   }
   else {
     interaction.reply('`work in progress :(`');

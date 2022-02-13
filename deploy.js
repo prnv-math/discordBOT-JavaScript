@@ -10,8 +10,8 @@ console.log(clientId,guildId)
 
 const commands = [
 	new SlashCommandBuilder().setName('ping').setDescription('Replies with pong!'),
-	new SlashCommandBuilder().setName('server').setDescription('Replies with server info!'),
-	new SlashCommandBuilder().setName('user').setDescription('Replies with user info!'),
+	// new SlashCommandBuilder().setName('server').setDescription('Replies with server info!'),
+	// new SlashCommandBuilder().setName('user').setDescription('Replies with user info!'),
 	new SlashCommandBuilder().setName('commit').setDescription('staff only command.'),
     new SlashCommandBuilder().setName('help').setDescription('Replies with helpful information for you!'),
     new SlashCommandBuilder().setName('start').setDescription('create an account in Disco-Life!'),
@@ -20,6 +20,7 @@ const commands = [
 	new SlashCommandBuilder().setName('gameplayinfo').setDescription('seek general gameplay guidelines.'),
 	new SlashCommandBuilder().setName('noticeboard').setDescription('noticeboard for latest game information!'),
 	new SlashCommandBuilder().setName('attributes').setDescription("View various attributes of your character."),
+	new SlashCommandBuilder().setName('boosts').setDescription("See which boosts are active at the moment for your character."),
 	new SlashCommandBuilder().setName('hashtagset').setDescription("let people know how you're feeling!").addStringOption(option => 
 		option.setName('hashtag')
 		.setDescription('type in a text! no need to use #. (most username rules apply to hashtags)')
