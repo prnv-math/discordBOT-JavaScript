@@ -37,7 +37,7 @@ const commands = [
 			.setRequired(false)
 			)
 	,
-	new SlashCommandBuilder().setName('inventory').setDescription('See what\'s in your inventory'),
+	new SlashCommandBuilder().setName('inventory').setDescription('See what is in your inventory'),
 ]
 	.map(command => command.toJSON());
 

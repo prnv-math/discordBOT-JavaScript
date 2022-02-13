@@ -51,8 +51,8 @@ async function dbmain()
   // globalOBJ.collection.deleteMany({});
   await globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
-  // await globalOBJ.collection.updateOne({userid :ownerid}, {$set : {inventory : {coins : 9999, bank : 9999}}});
-  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {likes : [], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now() - (60000*60*36), boosts:{coins : 1, hunger : 1, experience : 1} }})
+  // await globalOBJ.collection.updateOne({userid :ownerid}, {$set : {inventory : {cash : 9999, bank : 9999}}});
+  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {likes : [], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now() - (60000*60*36), boosts:{cash : 1, hunger : 1, experience : 1} }})
 
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
  
@@ -306,7 +306,7 @@ client.on('interactionCreate', async interaction => {
           changeStatus(interaction.member.id, "profile_created");
           const dad = random_name({gender : 'male'});
           const mom = random_name({last : false,gender : "female"});
-          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : [],char : char, bottom : 'none' , relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : dad}, {_id : 3, info : 'mother', strength : 0, playerid : 0 , name : mom}], username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here', attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now(), boosts:{coins : 1, hunger : 1, experience : 1} }})
+          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : [],char : char, bottom : 'none' , relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : dad}, {_id : 3, info : 'mother', strength : 0, playerid : 0 , name : mom}], username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here', attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now(), boosts:{cash : 1, hunger : 1, experience : 1} }})
           .then (() => {
           channel.send('`[success] profile created for ' + res + '`\n`try out other commands or use /help`');
           });
@@ -502,7 +502,7 @@ client.on('interactionCreate', async interaction => {
         })
         
         .then(() => createUser(interaction.member.id))
-        .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {coins : 0, bank : reward}, designation : {name : 'Student' , startedAt : today}}}))
+        .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {cash : 0, bank : reward}, designation : 'Student'}}))
         .then (() => {
         customizepfp(interaction);
         });
@@ -603,7 +603,7 @@ client.on('interactionCreate', async interaction => {
       },
         {
           name : 'designation',
-          value : 'student',
+          value : res[0]['designation'].toLowerCase(),
           
         },
         // {
@@ -723,7 +723,7 @@ client.on('interactionCreate', async interaction => {
   else if (interaction.commandName == 'boosts') 
   {
     const res = await globalOBJ.collection.find({userid : interaction.member.id}).toArray();
-    let embedd = emb("", "Each number represents a multiplier for corresponding field. 1 represents 100 % value and that no boosts are present.(`0.5` multiplier for hunger means that your hunger is halved. `2` for coins means that your coin gains are doubled.)");
+    let embedd = emb("", "Each number represents a multiplier for corresponding field. 1 represents 100 % value and that no boosts are present.(`0.5` multiplier for hunger means that your hunger is halved. `2` for cash means that your coin gains are doubled.)");
     embedd.setAuthor({
         name : 'Boosts',
         url : "",
@@ -768,14 +768,20 @@ client.on('interactionCreate', async interaction => {
       }
       else {
         //if gameid belongs to a player
-        if ((res[0]['likes']).includes(interaction.member.id)) 
-        {
-          interaction.reply('`You can\'t like ' + res[0]['username'] + ' twice`');
+        if (res[0]['userid'] == interaction.member.id){
+          interaction.reply({ content : '`You can\'t give a like to yourself.`', ephemeral : true});
         }
         else 
         {
-          await globalOBJ.collection.updateOne({gameid:id}, {$push : {likes : interaction.member.id}});
-          interaction.reply("`You gave a like to " + res[0]['username'] + " [total likes : " + ((res[0]['likes']).length + 1) + "]`");
+          if ((res[0]['likes']).includes(interaction.member.id)) 
+          {
+           interaction.reply('`You can\'t like ' + res[0]['username'] + ' twice`');
+          }
+          else 
+          {
+           await globalOBJ.collection.updateOne({gameid:id}, {$push : {likes : interaction.member.id}});
+           interaction.reply("`You gave a like to " + res[0]['username'] + " [total likes : " + ((res[0]['likes']).length + 1) + "]`");
+          }
         }
       }
     
@@ -787,8 +793,27 @@ client.on('interactionCreate', async interaction => {
 
 
   }
+  else if (interaction.commandName == 'inventory') {
+    const res = await globalOBJ.collection.find({userid : interaction.member.id}).toArray();
+    // console.log(res[0])
+    let embedd = emb("Inventory");
+    let txt = "`The items and cash obtained by " + res[0]['username'] + "`\n";
+    let itemfound = false;
+    for (const [key,value] of Object.entries(res[0]['inventory']))
+    { 
+      if (value > 0 && ['cash', 'bank'].includes(key) == false) {
+        itemfound = true;
+        txt += "\n**" + key.toLowerCase() + "** : " + value;
+      }
+    }
+    if (itemfound == false)
+      txt += "\nno items";
+    embedd.setDescription(txt);
+    embedd.setFooter({ text :"cash in hand : $" + (res[0]['inventory'])['cash'] + ", cash at bank : $" + (res[0]['inventory'])['bank']})
+    interaction.reply({embeds : [embedd]});
+  }
   else {
-    interaction.reply('`work in progress :(`');
+    interaction.reply('`work in progress :<`');
   }
 });
 
