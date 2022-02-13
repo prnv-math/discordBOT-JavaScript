@@ -52,7 +52,7 @@ async function dbmain()
   await globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
   // await globalOBJ.collection.updateOne({userid :ownerid}, {$set : {inventory : {coins : 9999, bank : 9999}}});
-  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now() - (60000*60*36), boosts:{coins : 1, hunger : 1, experience : 1} }})
+  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {likes : [], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now() - (60000*60*36), boosts:{coins : 1, hunger : 1, experience : 1} }})
 
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
  
@@ -126,23 +126,17 @@ async function createUser(uid) {
  console.log("bot gameid : "+g);
  if ((g + 1) < 99999999) 
  {
- const newENtry = await globalOBJ.collection.insertOne({userid: uid ,  gameid: g + 1 ,  status: 'agreed' });
- const updated = await globalOBJ.collection.updateOne({userid:0}, {$set : {gameid : (g+2)}}); 
- let res = await globalOBJ.collection.find({userid:uid}).toArray();
+ const newENtry = await globalOBJ.collection.insertOne({userid: uid ,  gameid: g ,  status: 'agreed' });
+ const updated = await globalOBJ.collection.updateOne({userid:0}, {$set : {gameid : (g+1)}}); 
+ let newusrRES = await globalOBJ.collection.find({userid:uid}).toArray();
 
- console.log('newUserid : ' + res[0]['gameid'] + " , newbotgameid : " + (g+2));
+ console.log('newUserid : ' + newusrRES[0]['gameid'] + " , newbotgameid : " + (g+1));
 //  console.log('new entry status :  '+newENtry[0]['status']);
  }
  else 
  {
    console.log('db gameid overflow');
  }
-}
-
-function changeStatus(uid, s) {
-
-  globalOBJ.collection.updateOne({userid:uid}, {$set : {status : s}});
-  // const res = await globalOBJ.collection.find({userid:uid}).toArray();
 }
 
 client.on('ready', () => {
@@ -152,8 +146,6 @@ client.on('ready', () => {
 
 });
 
-
-// );
 
 client.on('interactionCreate', async interaction => {
 	
@@ -196,7 +188,12 @@ client.on('interactionCreate', async interaction => {
 
   
   // ==============
+  function changeStatus(uid, s) {
 
+    globalOBJ.collection.updateOne({userid:uid}, {$set : {status : s}});
+    // const res = await globalOBJ.collection.find({userid:uid}).toArray();
+  }
+  
   async function customizepfp() {
     
   //  Take image from URL , and generate a buffer for it. 
@@ -309,7 +306,7 @@ client.on('interactionCreate', async interaction => {
           changeStatus(interaction.member.id, "profile_created");
           const dad = random_name({gender : 'male'});
           const mom = random_name({last : false,gender : "female"});
-          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : 0,char : char, bottom : 'none' , relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : dad}, {_id : 3, info : 'mother', strength : 0, playerid : 0 , name : mom}], username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here', attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now(), boosts:{coins : 1, hunger : 1, experience : 1} }})
+          globalOBJ.collection.updateOne({userid:interaction.member.id}, {$set : {likes : [],char : char, bottom : 'none' , relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : dad}, {_id : 3, info : 'mother', strength : 0, playerid : 0 , name : mom}], username : res,level : 1,accessory : 'none',top : 'none',outfit : 'none',favpet : 'none', employment : 'student', tag : '#new_around_here', attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30}, lastfed : Date.now(), boosts:{coins : 1, hunger : 1, experience : 1} }})
           .then (() => {
           channel.send('`[success] profile created for ' + res + '`\n`try out other commands or use /help`');
           });
@@ -601,7 +598,7 @@ client.on('interactionCreate', async interaction => {
       },
       fields : [{
         name : "likes",
-        value : `${likes}`,
+        value : `${likes.length}`,
         
       },
         {
@@ -741,6 +738,53 @@ client.on('interactionCreate', async interaction => {
 
   }
   else if (interaction.commandName == 'like'){
+    const mention = interaction.options.getUser('mention');
+    const id = interaction.options.getInteger('gameid');
+    if(mention)
+      {
+        const checkuser = await getGameid(mention.id);
+        if (checkuser < 0) {
+          interaction.reply(`this user has no account in the game.`)
+        }
+        else {
+          const res = await globalOBJ.collection.find({userid : mention.id}).toArray();
+          if ((res[0]['likes']).includes(interaction.member.id)) 
+          {
+            interaction.reply('`You can\'t like ' + res[0]['username'] + ' twice`');
+          }
+          else 
+          {
+          await globalOBJ.collection.updateOne({userid : mention.id} , {$push : {likes :interaction.member.id}});
+          interaction.reply("`You gave a like to " + res[0]['username'] + " [total likes : " + (res[0]['likes']).length + "]`");
+          }
+        }
+      }
+    else if (id) {
+      // console.log('no user mention');
+      const res = await globalOBJ.collection.find({gameid : id}).toArray();
+      
+      if (res == undefined) {
+        interaction.reply(`this gameid is invalid.`)
+      }
+      else {
+        //if gameid belongs to a player
+        if ((res[0]['likes']).includes(interaction.member.id)) 
+        {
+          interaction.reply('`You can\'t like ' + res[0]['username'] + ' twice`');
+        }
+        else 
+        {
+          await globalOBJ.collection.updateOne({gameid:id}, {$push : {likes : interaction.member.id}});
+          interaction.reply("`You gave a like to " + res[0]['username'] + " [total likes : " + ((res[0]['likes']).length + 1) + "]`");
+        }
+      }
+    
+    }
+    else {
+      const res = await globalOBJ.collection.find({userid : interaction.member.id}).toArray();
+      interaction.reply({ content : '`You have total '+((res[0]['likes']).length + 1)+' likes.`', ephemeral : true })
+    }
+
 
   }
   else {

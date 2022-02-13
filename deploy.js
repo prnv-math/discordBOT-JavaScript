@@ -26,6 +26,18 @@ const commands = [
 		.setDescription('type in a text! no need to use #. (most username rules apply to hashtags)')
 		.setRequired(true)
 		),
+	new SlashCommandBuilder().setName('like').setDescription("Give a Like to a player, select \'mention\' or \'gameid\', and select a user or type in their game id")
+	    .addUserOption(option => 
+			option.setName('mention')
+			.setDescription('This is the field where you can mention a user that you want to give a like to.')
+			.setRequired(false))
+		.addIntegerOption(option =>
+			option.setName('gameid')
+			.setDescription("You can type the Disco-Life gameid of a player here.")
+			.setRequired(false)
+			)
+	,
+	new SlashCommandBuilder().setName('inventory').setDescription('See what\'s in your inventory'),
 ]
 	.map(command => command.toJSON());
 
