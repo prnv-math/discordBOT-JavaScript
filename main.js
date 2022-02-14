@@ -49,7 +49,7 @@ async function dbmain()
   
   await globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
-  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : { designation : [['student', Date.now()]], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
+  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {expenses : [], designation : [['student', Date.now()]], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
    dates : {lastfed : Date.now() - (60000*60*36), hashtag : undefined}, boosts:{cash : 1, hunger : 1, experience : 1} }});
 
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
@@ -126,7 +126,6 @@ async function createUser(uid) {
  let newusrRES = await globalOBJ.collection.find({userid:uid}).toArray();
 
  console.log('newUserid : ' + newusrRES[0]['gameid'] + " , newbotgameid : " + (g+1));
-//  console.log('new entry status :  '+newENtry[0]['status']);
  }
  else 
  {
@@ -144,7 +143,6 @@ client.on('ready', () => {
 
 client.on('interactionCreate', async interaction => {
 	
-  let e = {};
   const channel=interaction.channel;
 
   function emb(t,desc="", col = 0x3AABC2) 
@@ -391,7 +389,7 @@ client.on('interactionCreate', async interaction => {
                 }
                 )
                 .catch(collected => {
-                  channel.send("`err`");
+                  channel.send("`encountered an error`");
                 })
                 })
               }
@@ -411,7 +409,7 @@ client.on('interactionCreate', async interaction => {
   }
   else if(interaction.commandName === 'help')
   {
-    e=emb("**For more info:** ` "+prefix+" help [command] `", "**Add ` "+prefix+" ` before any command**");
+    let e=emb("**For more info:** ` "+prefix+" help [command] `", "**Add ` "+prefix+" ` before any command**");
     e.setAuthor(
       {
         name: 'Commands',
@@ -444,7 +442,7 @@ client.on('interactionCreate', async interaction => {
   }
   else if (interaction.commandName === 'rules')
   {
-    e = emb("DISCO-LIFE : Rules", "`rules are necessary and understood regulations you must not defy in order to create a frinedly environment for everyone. Doing so will result in severe punishment, or a ban to make it a better place for other players.`")
+    let e = emb("DISCO-LIFE : Rules", "`rules are necessary and understood regulations you must not defy in order to create a frinedly environment for everyone. Doing so will result in severe punishment, or a ban to make it a better place for other players.`")
     e.addField("\u200B"+"\n" + "\u200B" +"#1 ", "In any social platform the game provides wihtin itself, do not be toxic , bully, intimidate, shame, insult, harass, troll, flame, cause upset or shock to another person, or exhibit vulgar , racist , or __any kind of hostile behavior,__ towards other players in the game.");
     e.addField("\u200B"+"\n" + "\u200B" +"#2 ", "Do not engage in __illegal things__ within the game! including breaking Discord ToS, using hacks, mods, cheats, automation software (commonly known as 'scripts', 'macros', or 'bots').");
     e.addField("\u200B"+"\n" + "\u200B" +"#3 ", "Do not use resources gathered in the game for __'real money trading'.__");
@@ -462,7 +460,7 @@ client.on('interactionCreate', async interaction => {
   {
     if (checkusr < 0) 
     {
-    const message = await interaction.reply({content: ">>> [ booting up ]\n\nYou want to play Disco-Life! \nCheck out gameplayinfo,\nMake sure you have read and\naccepted the rules .\nThen react with :thumbsup: !\n\n`"+prefix.toLowerCase()+" gameplayinfo`, `"+prefix.toLowerCase()+" rules`", fetchReply:true})
+    const message = await interaction.reply({content: ">>> Oh!\n\nYou want to play Disco-Life! \nCheck out gameplayinfo,\nMake sure you have read and\naccepted the rules .\nThen react with :thumbsup: !\n\n`"+prefix.toLowerCase()+" gameplayinfo`, `"+prefix.toLowerCase()+" rules`", fetchReply:true})
     const emo = '👍';
     message.react(emo);
     // ==============================
@@ -498,7 +496,7 @@ client.on('interactionCreate', async interaction => {
         })
         
         .then(() => createUser(interaction.member.id))
-        .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {cash : 0, bank : reward}, designation : [['student', Date.now()]]}}))
+        .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {cash : 0, bank : reward}, expenses : [], designation : [['student', Date.now()]]}}))
         .then (() => {
         customizepfp(interaction);
         });
@@ -515,7 +513,7 @@ client.on('interactionCreate', async interaction => {
     else {
       let status = await getStatus(interaction.member.id);
       let gid = await getGameid(interaction.member.id);
-      console.log('chk = ' +checkusr);
+      // console.log('chk = ' +checkusr);
       if(status != 'agreed')
       {
         interaction.reply("You already have an account.\n" + "`game id : ("+ gid +")`\n`try out other commands or use /help`");
@@ -599,7 +597,7 @@ client.on('interactionCreate', async interaction => {
       },
         {
           name : 'designation',
-          value : (res[0]['designation'])[0][0],
+          value : (res[0]['designation'])[(res[0]['designation']).length - 1][0]
           
         },
         // {
@@ -622,7 +620,7 @@ client.on('interactionCreate', async interaction => {
 
     }
     catch {
-        interaction.reply('`error loading item values & images`')
+        interaction.reply('`there was a problem loading item values & images`')
     }
   }
   else if (interaction.commandName == 'attributes'){
@@ -820,9 +818,159 @@ client.on('interactionCreate', async interaction => {
     //   iconURL : 'https://i.imgur.com/RMUkwmM.jpg'
     //   });
     embedd.setThumbnail("https://i.imgur.com/HVbosG1.jpg");
-    let txt = "account balance : " + (res[0]['inventory'])['bank'];
+    let txt = "**account balance** : `$" + (res[0]['inventory'])['bank'] + "`\n\n__**Recurring expenses**__"+'\n```';
+    let expensesCheck = false;
+    for (pair of res[0]['expenses']) {
+      if (pair != undefined) {
+        expensesCheck = 1;
+        txt+= pair[0] + " [$"+ pair[1] +"] " +"\n";
+      } 
+    }
+    if(expensesCheck == 0)
+      txt+= 'none```\n';
+    else
+      txt+= '```';
+    txt += "1️⃣ `deposit`\n2️⃣ `withdraw`\n3️⃣ `Loan`\n4️⃣ `close`"
     embedd.setDescription(txt);
-    interaction.reply({embeds : [embedd]});
+    const e = await interaction.reply({embeds : [embedd], fetchReply : true});
+    const emo = ['1️⃣','2️⃣', '3️⃣','4️⃣'];
+    e.react(emo[0]);
+    e.react(emo[1]);
+    e.react(emo[2]);
+    e.react(emo[3])
+    .then (() =>{
+      
+    const filter = (reaction, user) => {
+        //  console.log(emo.includes(reaction.emoji.name) + " , " + (user.id === interaction.member.id))
+         return emo.includes(reaction.emoji.name) && (user.id === interaction.member.id);
+    };
+    
+    e.awaitReactions({ filter, max: 1, time: 15000, errors: ['time'] })
+     .then(collected => {
+      const reaction = collected.first();
+
+      if (reaction.emoji.name === emo[3]) {
+        channel.send(`*left bank*`);
+        }
+      else if (reaction.emoji.name === emo[1]) {
+        channel.send('> Please enter an amount to withdraw from your account.');
+        const filter = response => {
+          if (response.author != interaction.member.user) {
+            return false;
+          }
+          let check = true;
+          let txt = "";
+          const b = (res[0]['inventory'])['bank'];
+          const amt = parseInt(response);
+          if (isNaN(amt)) {
+            txt += 'invalid number\n';
+            check = 0;
+          }
+          if (amt > b) {
+            txt += "you can't withdraw that much";
+            check = 0;
+          }
+          if (txt)
+            channel.send(txt);
+          return check;
+        }
+        channel.awaitMessages({ filter, max: 1, time: 45000, errors: ['time'] })
+          .then(collected => {
+            // channel.send(collected.content);
+            const amt = parseInt(collected.first().content);
+            globalOBJ.collection.updateOne({ userid: interaction.member.id }, { $inc: { 'inventory.cash': amt, 'inventory.bank': -1 * amt } })
+              .then(() => channel.send("`successfully withdrew $" + amt + " [cash in hand : $" + ((res[0]['inventory'])['cash'] + amt) + "]`"))
+          })
+          .catch(collected => {
+            console.log(collected);
+            channel.send('> no response found ');
+          });
+        // ======================
+      }
+      else if (reaction.emoji.name === emo[0]) {
+        channel.send(`>>> Please enter an amount to deposit.\n\`cash deposited in bank will periodically receive a small interest.\``); 
+        const filter = response => {
+            if (response.author != interaction.member.user) {
+              return false;
+            }
+            let check = true;
+            let txt = "";
+            const c = (res[0]['inventory'])['cash'];
+            const amt = parseInt (response);
+            if(isNaN(amt)) {
+              txt += 'invalid number\n';
+              check = 0;
+            }
+            if(amt >= c + 100) {
+              txt += "you need to have more cash to deposit that much";
+              check = 0;
+            }
+            if (txt)
+              channel.send(txt);
+            return check;
+        }
+        channel.awaitMessages({ filter , max: 1, time: 45000, errors: ['time'] })
+        .then (collected => {
+          // channel.send(collected.content);
+          const amt = parseInt(collected.first().content);
+          globalOBJ.collection.updateOne({userid : interaction.member.id} , {$inc : {'inventory.cash' :  -1*amt, 'inventory.bank' : amt}})
+          .then(() => channel.send("`successfully deposited $"+ amt + " [balance : $" + ((res[0]['inventory'])['bank'] + amt) + "]`"))
+        })
+        .catch(collected => {
+          console.log(collected);
+          channel.send('> no response found ');
+        });
+        // =================
+      }
+      else {
+        if ((res[0]['dates'])['loan'] == undefined) {
+
+          if ((res[0]['designation'])[(res[0]['designation']).length - 1][0] != 'student')
+            channel.send('> "School students don\'t get loans over here" - Bank Manager')
+          else {
+            let loan = (Math.ceil(((res[0]['inventory'])['bank'] + (res[0]['inventory'])['cash']) / (1.5 * 100))) * 100;
+            if (loan > 1999 == false) {
+              channel.send(">>> Application for Loan rejected by bank.\nPerhaps you need to have more cash as loan security.");
+            }
+            else {
+              loan < 10000 ? loan = (Math.ceil(((res[0]['inventory'])['bank'] + (res[0]['inventory'])['cash']) / (1.5 * 100))) * 100 : loan = 10000;
+              channel.send('>>> **You will receive a loan for $' + loan + '** which you will have to pay back, as well as \na (not so)small additional interest. \n**Continue?**')
+                .then(collected => {
+                  const emot = ['✅', '❎'];
+                  collected.react(emot[0])
+                    .then(() => collected.react(emot[1]));
+                  const filter = (reaction, user) => {
+                    //  console.log(emo.includes(reaction.emoji.name) + " , " + (user.id === interaction.member.id))
+                    return emot.includes(reaction.emoji.name) && (user.id === interaction.member.id);
+                  };
+                  collected.awaitReactions({ filter, max: 1, time: 15000, errors: ['time'] })
+                    .then(collected => {
+                      const r = (collected.first()).emoji.name;
+                      if (r != '✅')
+                        channel.send("`cancelled.`");
+                      else {
+                        globalOBJ.collection.updateOne({ userid: interaction.member.id }, { $set: { 'dates.loan': Date.now() + (60000 * 60 * 24 * 13) }, $push: { expenses: ['loan installment', (loan * 1.2 * 7.7) / 100] }, $inc: { 'inventory.cash': loan } })
+                          .then(() => channel.send("> **You received `$" + loan + "`**"));
+                      }
+                    })
+                })
+            }
+
+          }
+      }
+      else {
+        const remaining = humanizeDuration((res[0]['dates'])['loan'] - Date.now(), { largest: 2 });
+        return channel.send("```You have to finish the payment of existing loan installments before you can apply again.\nIt is estimated to be fully paid off in "+ remaining +"```")
+        .catch (console.error);
+      }
+      }
+      })
+      .catch(collected => {
+        console.log(collected);
+        interaction.followUp('> no response found ');
+      });
+      // =================
+    });
   }
   else {
     interaction.reply('`work in progress :<`');
