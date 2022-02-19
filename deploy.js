@@ -41,6 +41,9 @@ const commands = [
 	new SlashCommandBuilder().setName('bank').setDescription('manage your bank account.'),
 	new SlashCommandBuilder().setName('education').setDescription('meet your educational needs.'),
 	new SlashCommandBuilder().setName('jobs').setDescription('find a job.'),
+	new SlashCommandBuilder().setName('relationship').setDescription('Interact wuith the one.'),
+	new SlashCommandBuilder().setName('work').setDescription('work for your employer.'),
+	
 ]
 	.map(command => command.toJSON());
 
