@@ -830,8 +830,11 @@ client.on('interactionCreate', async interaction => {
       txt+= 'none```\n';
     else
       txt+= '```';
-    txt += "1️⃣ `deposit`\n2️⃣ `withdraw`\n3️⃣ `Loan`\n4️⃣ `close`"
+    txt += "\n1️⃣ `deposit`\n2️⃣ `withdraw`\n3️⃣ `Loan`\n4️⃣ `close`"
     embedd.setDescription(txt);
+    embedd.setFooter({
+      text : 'react with emotes associated with a function'
+    })
     const e = await interaction.reply({embeds : [embedd], fetchReply : true});
     const emo = ['1️⃣','2️⃣', '3️⃣','4️⃣'];
     e.react(emo[0]);
@@ -971,6 +974,48 @@ client.on('interactionCreate', async interaction => {
       });
       // =================
     });
+  }
+  else if(interaction.commandName === 'education') {
+    let emm = emb("");
+    emm.setAuthor({
+      name : 'Education',
+      url : ""
+    });
+    emm.setThumbnail("https://i.imgur.com/W0gcUeZ.jpg");
+    let txt = "```";
+    const res = await globalOBJ.collection.find({userid:interaction.member.id}).toArray();
+    const lastIndex = (res[0]['designation']).length - 1;
+    const lastjob = (res[0]['designation'])[lastIndex];
+    if (lastjob[0] == 'student') {
+      txt += 'school student\n' + `${humanizeDuration(lastjob[1] + (60000 * 60 * 24) - Date.now(), {largest : 1})} left in school`;
+    }
+    else if (lastjob[0] == 'college student') {
+      txt += 'college student - '+ lastjob[2] +'\n' + `${humanizeDuration(lastjob[1] + (60000 * 60 * 24 * 3) - Date.now(), {largest : 1})} left in college`;
+    }
+    txt += '```\n\n__**Current qualifications**__\n```';
+  checkQual = false;
+    for ( phase of res[0]['designation']) {
+      if ((res[0]['designation']).indexOf(phase) != (res[0]['designation']).length - 1)
+      {
+      if (phase[0].includes('student')) {
+        checkQual = true;
+        phase[0] != 'student'?txt += phase [0]:txt += 'high school student';
+        if (phase[2] != undefined)
+          txt += phase [2];
+        // const endDate = new Date(phase[1]);
+        // txt += " (" + endDate.getDate() + "/" + endDate.getMonth() +")";
+        txt += '\n';
+      }
+      }
+    }
+    if (checkQual == false) 
+     txt += 'none'
+    txt += '```'
+    emm.setDescription(txt);
+    emm.setFooter({
+      text:'react with emotes associated with a function'
+    })
+    interaction.reply({embeds : [emm]});
   }
   else {
     interaction.reply('`work in progress :<`');
