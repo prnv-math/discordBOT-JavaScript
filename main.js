@@ -22,6 +22,14 @@ ownerid = config.ownerid
 console.log("code ownerid : " + ownerid)
 
 
+//COURSE CLASS for education
+class course {
+  constructor(course_name, duration, eligibility) {
+    this.name = course_name;
+    this.duration = duration;
+    this.eligibility = eligibility;
+  }
+}
 
 	// .setColor('#0099ff')
 	// .setTitle('Some title')
@@ -49,7 +57,7 @@ async function dbmain()
   
   await globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
-  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {expenses : [], designation : [['student', Date.now()]], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
+  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {expenses : [], designation : [['student', Date.now() + (60000 * 60 * 24)]], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
    dates : {lastfed : Date.now() - (60000*60*36), hashtag : undefined}, boosts:{cash : 1, hunger : 1, experience : 1} }});
 
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
@@ -496,7 +504,7 @@ client.on('interactionCreate', async interaction => {
         })
         
         .then(() => createUser(interaction.member.id))
-        .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {cash : 0, bank : reward}, expenses : [], designation : [['student', Date.now()]]}}))
+        .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {cash : 0, bank : reward}, expenses : [], designation : [['student', Date.now() + (60000 * 60 * 24)]]}}))
         .then (() => {
         customizepfp(interaction);
         });
@@ -833,9 +841,10 @@ client.on('interactionCreate', async interaction => {
     txt += "\n1️⃣ `deposit`\n2️⃣ `withdraw`\n3️⃣ `Loan`\n4️⃣ `close`"
     embedd.setDescription(txt);
     embedd.setFooter({
-      text : 'react with emotes associated with a function'
+      text : 'react with the number associated with a function'
     })
     const e = await interaction.reply({embeds : [embedd], fetchReply : true});
+    const m = await channel.send('`please wait a second`')
     const emo = ['1️⃣','2️⃣', '3️⃣','4️⃣'];
     e.react(emo[0]);
     e.react(emo[1]);
@@ -843,6 +852,7 @@ client.on('interactionCreate', async interaction => {
     e.react(emo[3])
     .then (() =>{
       
+    m.delete();
     const filter = (reaction, user) => {
         //  console.log(emo.includes(reaction.emoji.name) + " , " + (user.id === interaction.member.id))
          return emo.includes(reaction.emoji.name) && (user.id === interaction.member.id);
@@ -976,24 +986,28 @@ client.on('interactionCreate', async interaction => {
     });
   }
   else if(interaction.commandName === 'education') {
-    let emm = emb("");
+    let emm = emb("Get educated & Gain qualifications");
     emm.setAuthor({
       name : 'Education',
-      url : ""
+      url : "",
+      iconURL : 'https://i.imgur.com/iK9x9Oo.gif'
     });
-    emm.setThumbnail("https://i.imgur.com/W0gcUeZ.jpg");
+    // emm.setThumbnail("https://i.imgur.com/rcFEfji.gif");
     let txt = "```";
     const res = await globalOBJ.collection.find({userid:interaction.member.id}).toArray();
     const lastIndex = (res[0]['designation']).length - 1;
     const lastjob = (res[0]['designation'])[lastIndex];
     if (lastjob[0] == 'student') {
-      txt += 'school student\n' + `${humanizeDuration(lastjob[1] + (60000 * 60 * 24) - Date.now(), {largest : 1})} left in school`;
+      txt += 'school student\n' + `${humanizeDuration(lastjob[1] - Date.now(), {largest : 1})} left in school`;
     }
     else if (lastjob[0] == 'college student') {
-      txt += 'college student - '+ lastjob[2] +'\n' + `${humanizeDuration(lastjob[1] + (60000 * 60 * 24 * 3) - Date.now(), {largest : 1})} left in college`;
+      txt += 'college student - '+ lastjob[2] +'\n' + `${humanizeDuration(lastjob[1] - Date.now(), {largest : 1})} left in college`;
+    }
+    else {
+      txt+= 'not in education';
     }
     txt += '```\n\n__**Current qualifications**__\n```';
-  checkQual = false;
+    checkQual = false;
     for ( phase of res[0]['designation']) {
       if ((res[0]['designation']).indexOf(phase) != (res[0]['designation']).length - 1)
       {
@@ -1002,20 +1016,53 @@ client.on('interactionCreate', async interaction => {
         phase[0] != 'student'?txt += phase [0]:txt += 'high school student';
         if (phase[2] != undefined)
           txt += phase [2];
-        // const endDate = new Date(phase[1]);
-        // txt += " (" + endDate.getDate() + "/" + endDate.getMonth() +")";
         txt += '\n';
       }
       }
     }
     if (checkQual == false) 
-     txt += 'none'
-    txt += '```'
+     txt += 'none';
+    txt += '```\n1️⃣ `Apprenticeships`\n2️⃣ `College courses`\n3️⃣ `University courses`\n4️⃣ `Other courses`\n5️⃣`close`\n';
+    // txt += '```'
     emm.setDescription(txt);
     emm.setFooter({
-      text:'react with emotes associated with a function'
+      text:'react with the number associated with an option'
     })
-    interaction.reply({embeds : [emm]});
+    const e = await interaction.reply({embeds : [emm],fetchReply : true});
+    const emo = ['1️⃣','2️⃣', '3️⃣','4️⃣','5️⃣'];
+    const m = await channel.send('`please wait a second`');
+    e.react(emo[0]);
+    e.react(emo[1]);
+    e.react(emo[2]);
+    e.react(emo[3]);
+    e.react(emo[4])
+    .then (() =>{
+      m.delete();
+            
+      const filter = (reaction, user) => {
+        //  console.log(emo.includes(reaction.emoji.name) + " , " + (user.id === interaction.member.id))
+        return emo.includes(reaction.emoji.name) && (user.id === interaction.member.id);
+      };
+
+      e.awaitReactions({ filter, max: 1, time: 20000, errors: ['time'] })
+        .then(collected => {
+          const reaction = collected.first();
+
+          if (reaction.emoji.name === emo[4]) {
+            channel.send(`*left the campus*`);
+          }
+          else if (reaction.emoji.name === emo[0]) {
+            channel.send('>>> **Apprenticeship**\nAll apprenticeship courses are full time and take $999 course fee.\n**Choose a course.**\n`type a course name, or \'cancel\' to leave`\n' + 
+            '');
+          }
+          else {
+            interaction.followUp('`didn\`t recognize that response`')
+          }
+        })
+       .catch(() => {
+         interaction.followUp('no response received')
+       });
+    });
   }
   else {
     interaction.reply('`work in progress :<`');
