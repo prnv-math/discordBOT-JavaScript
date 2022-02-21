@@ -1052,15 +1052,16 @@ client.on('interactionCreate', async interaction => {
             channel.send(`*left the campus*`);
           }
           else if (reaction.emoji.name === emo[0]) {
-            channel.send('>>> **Apprenticeship**\nAll apprenticeship courses are full time and take $999 course fee.\n**Choose a course.**\n`type a course name, or \'cancel\' to leave`\n' + 
+            channel.send('>>> **Apprenticeship**\nAll apprenticeships pay you a salary, and give you a qualoification at the same time! The pay is low, but better than nothing , no? Because you will be working, it is slightly different from other courses. You have to use work command to progress through apprenticeship. Also, some of them take a small enrollment fee. \n**Choose a course.**\n`type a course name, or \'cancel\' to leave`\n' + 
             '');
           }
           else {
             interaction.followUp('`didn\`t recognize that response`')
           }
         })
-       .catch(() => {
-         interaction.followUp('no response received')
+       .catch(collected => {
+        console.log(collected);
+        interaction.followUp('no response received');
        });
     });
   }
