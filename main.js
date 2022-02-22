@@ -24,9 +24,10 @@ console.log("code ownerid : " + ownerid)
 
 //COURSE CLASS for education
 class course {
-  constructor(course_name, duration, eligibility) {
+  constructor(course_name, category, duration = undefined, eligibility = undefined) {
     this.name = course_name;
     this.duration = duration;
+    this.class = category;
     this.eligibility = eligibility;
   }
 }
@@ -59,6 +60,23 @@ async function dbmain()
   
   await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {expenses : [], designation : [['student', Date.now() + (60000 * 60 * 24)]], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
    dates : {lastfed : Date.now() - (60000*60*36), hashtag : undefined}, boosts:{cash : 1, hunger : 1, experience : 1} }});
+  
+  //update course details in database
+  // let courses = [];
+  // function createCourse( course_name, classname ) {
+  //   let newcourse;
+  //   if (classname == 'apprenticeship')
+  //     newcourse = new course (course_name, classname, 3, 'none')
+  //   return newcourse;
+  // }
+  // courses.push(createCourse('Software Development Apprenticeship', 'apprenticeship'));
+  // courses.push(createCourse('Graphic Design Apprenticeship', 'apprenticeship'));
+  // courses.push(createCourse('Ethical Hacking Apprenticeship', 'apprenticeship'));
+  // courses.push(createCourse('Mechanic Apprenticeship', 'apprenticeship'));
+  // courses.push(createCourse('Accounting Apprenticeship', 'apprenticeship'));
+  // courses.push(createCourse('Business Apprenticeship', 'apprenticeship'));
+  // courses.push(createCourse('Systems Analysis Apprenticeship', 'apprenticeship'));
+  // await globalOBJ.collection.updateOne({userid : 0}, {$set : {courseDetails : courses}});
 
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
  
@@ -844,15 +862,15 @@ client.on('interactionCreate', async interaction => {
       text : 'react with the number associated with a function'
     })
     const e = await interaction.reply({embeds : [embedd], fetchReply : true});
-    const m = await channel.send('`please wait a second`')
+    // const m = await channel.send('`please wait a second`')
     const emo = ['1️⃣','2️⃣', '3️⃣','4️⃣'];
     e.react(emo[0]);
     e.react(emo[1]);
     e.react(emo[2]);
     e.react(emo[3])
-    .then (() =>{
+    // .then (() =>{
       
-    m.delete();
+    // m.delete();
     const filter = (reaction, user) => {
         //  console.log(emo.includes(reaction.emoji.name) + " , " + (user.id === interaction.member.id))
          return emo.includes(reaction.emoji.name) && (user.id === interaction.member.id);
@@ -983,7 +1001,7 @@ client.on('interactionCreate', async interaction => {
         interaction.followUp('> no response found ');
       });
       // =================
-    });
+    // });
   }
   else if(interaction.commandName === 'education') {
     let emm = emb("Get educated & Gain qualifications");
@@ -1022,7 +1040,7 @@ client.on('interactionCreate', async interaction => {
     }
     if (checkQual == false) 
      txt += 'none';
-    txt += '```\n1️⃣ `Apprenticeships`\n2️⃣ `College courses`\n3️⃣ `University courses`\n4️⃣ `Other courses`\n5️⃣`close`\n';
+    txt += '\n```\n1️⃣ `Apprenticeships`\n2️⃣ `College courses`\n3️⃣ `University courses`\n4️⃣ `Other courses`\n5️⃣`close`\n';
     // txt += '```'
     emm.setDescription(txt);
     emm.setFooter({
@@ -1030,14 +1048,14 @@ client.on('interactionCreate', async interaction => {
     })
     const e = await interaction.reply({embeds : [emm],fetchReply : true});
     const emo = ['1️⃣','2️⃣', '3️⃣','4️⃣','5️⃣'];
-    const m = await channel.send('`please wait a second`');
+    // const m = await channel.send('`please wait a second`');
     e.react(emo[0]);
     e.react(emo[1]);
     e.react(emo[2]);
     e.react(emo[3]);
     e.react(emo[4])
-    .then (() =>{
-      m.delete();
+    // .then (() =>{
+      // m.delete();
             
       const filter = (reaction, user) => {
         //  console.log(emo.includes(reaction.emoji.name) + " , " + (user.id === interaction.member.id))
@@ -1052,8 +1070,40 @@ client.on('interactionCreate', async interaction => {
             channel.send(`*left the campus*`);
           }
           else if (reaction.emoji.name === emo[0]) {
-            channel.send('>>> **Apprenticeship**\nAll apprenticeships pay you a salary, and give you a qualoification at the same time! The pay is low, but better than nothing , no? Because you will be working, it is slightly different from other courses. You have to use work command to progress through apprenticeship. Also, some of them take a small enrollment fee. \n**Choose a course.**\n`type a course name, or \'cancel\' to leave`\n' + 
-            '');
+
+            let txt = '>>> **Apprenticeship**\nAll apprenticeships pay you a salary, and give you a qualification at the same time! The pay is low, but it is what it is. \n**Choose a course.**\n`type a course name, or \'cancel\' to leave`\n\n';
+            txt += '```';
+            let courses2 = [];
+            globalOBJ.collection.find({userid : 0}).toArray()
+            .then(collected => {
+              // console.log('c - '+collected[0]['courseDetails']);
+              courses2 = collected[0]['courseDetails'];
+              for (c in courses2) {
+                // console.log(c + ' = ' + courses2[c]['name'])
+                txt += (1 + parseInt(c))+' : '+(courses2[c]).name + '\n';
+              }
+              txt += '```';
+              channel.send(txt);
+              const filter = response => {
+                if (response.author != interaction.member.user) {
+                  return false;
+                }
+                // let names = [];
+                for (c in courses2) {
+                  if (response.content.toLowerCase() == ((courses2[c]['name']).split(' Apprenticeship')[0]).toLowerCase() || (response.content.toLowerCase() == ((courses2[c]['name']).split(' Apprenticeship')[0]).toLowerCase()) + ' apprenticeship')
+                    return true;
+                }
+                return false;
+              }
+              channel.awaitMessages({ filter, max: 1, time: 45000, errors: ['time'] })
+                .then(collected => {
+                  channel.send(collected.first().content)
+                })
+                .catch(collected => {
+                  console.log(collected);
+                  interaction.followUp('no response received');
+                 });
+            });
           }
           else {
             interaction.followUp('`didn\`t recognize that response`')
@@ -1063,7 +1113,7 @@ client.on('interactionCreate', async interaction => {
         console.log(collected);
         interaction.followUp('no response received');
        });
-    });
+    // });
   }
   else {
     interaction.reply('`work in progress :<`');
