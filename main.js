@@ -58,7 +58,7 @@ async function dbmain()
   
   await globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
-  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {expenses : [], designation : [['student', Date.now() + (60000 * 60 * 24)]], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
+  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {expenses : [], designation : [['student', Date.now(), 'course']], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
    dates : {lastfed : Date.now() - (60000*60*36), hashtag : undefined}, boosts:{cash : 1, hunger : 1, experience : 1} }});
   
   //update course details in database
@@ -522,7 +522,7 @@ client.on('interactionCreate', async interaction => {
         })
         
         .then(() => createUser(interaction.member.id))
-        .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {cash : 0, bank : reward}, expenses : [], designation : [['student', Date.now() + (60000 * 60 * 24)]]}}))
+        .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {cash : 0, bank : reward}, expenses : [], designation : [['student', Date.now() , 'course']]}}))
         .then (() => {
         customizepfp(interaction);
         });
@@ -1015,13 +1015,16 @@ client.on('interactionCreate', async interaction => {
     const res = await globalOBJ.collection.find({userid:interaction.member.id}).toArray();
     const lastIndex = (res[0]['designation']).length - 1;
     const lastjob = (res[0]['designation'])[lastIndex];
+    let quit = '5️⃣ `quit course`\n' + '6️⃣ `close`\n';
     if (lastjob[0] == 'student') {
-      txt += 'school student\n' + `${humanizeDuration(lastjob[1] - Date.now(), {largest : 1})} left in school`;
+      txt += 'school student\n' + `${humanizeDuration((lastjob[1] + (60000*60*24)) - Date.now(), {largest : 1})} left in school`;
     }
-    else if (lastjob[0] == 'college student') {
+    else if (lastjob[3] == 'college course') {
       txt += 'college student - '+ lastjob[2] +'\n' + `${humanizeDuration(lastjob[1] - Date.now(), {largest : 1})} left in college`;
     }
-    else {
+    else 
+    {
+      quit = '5️⃣ `close`\n';
       txt+= 'not in education';
     }
     txt += '```\n\n__**Current qualifications**__\n```';
@@ -1029,7 +1032,7 @@ client.on('interactionCreate', async interaction => {
     for ( phase of res[0]['designation']) {
       if ((res[0]['designation']).indexOf(phase) != (res[0]['designation']).length - 1)
       {
-      if (phase[0].includes('student')) {
+      if (phase[3] == ('course')) {
         checkQual = true;
         phase[0] != 'student'?txt += phase [0]:txt += 'high school student';
         if (phase[2] != undefined)
@@ -1040,20 +1043,22 @@ client.on('interactionCreate', async interaction => {
     }
     if (checkQual == false) 
      txt += 'none';
-    txt += '\n```\n1️⃣ `Apprenticeships`\n2️⃣ `College courses`\n3️⃣ `University courses`\n4️⃣ `Other courses`\n5️⃣`close`\n';
+    txt += '```\n\n1️⃣ `Apprenticeships`\n2️⃣ `College courses`\n3️⃣ `University courses`\n4️⃣ `Other courses`\n' + quit;
     // txt += '```'
     emm.setDescription(txt);
     emm.setFooter({
       text:'react with the number associated with an option'
     })
     const e = await interaction.reply({embeds : [emm],fetchReply : true});
-    const emo = ['1️⃣','2️⃣', '3️⃣','4️⃣','5️⃣'];
+    const emo = ['1️⃣','2️⃣', '3️⃣','4️⃣','5️⃣','6️⃣'];
     // const m = await channel.send('`please wait a second`');
     e.react(emo[0]);
     e.react(emo[1]);
     e.react(emo[2]);
     e.react(emo[3]);
     e.react(emo[4])
+    if(quit != '5️⃣ `close`\n')
+      e.react(emo[5])
     // .then (() =>{
       // m.delete();
             
@@ -1066,12 +1071,21 @@ client.on('interactionCreate', async interaction => {
         .then(collected => {
           const reaction = collected.first();
 
-          if (reaction.emoji.name === emo[4]) {
+          if (reaction.emoji.name === emo[4] && quit == '5️⃣ `close`\n') {
             channel.send(`*left the campus*`);
+          }
+          else if (reaction.emoji.name === emo[4]) {
+            globalOBJ.collection.updateOne({userid : interaction.member.id}, {$push : {designation : ['none', Date.now(), 'none']}})
+            .then (() => {
+              channel.send('*you left the course*');
+            })
+            .catch(collected => {
+              console.log('err ' + collected)
+            })
           }
           else if (reaction.emoji.name === emo[0]) {
 
-            let txt = '>>> **Apprenticeship**\nAll apprenticeships pay you a salary, and give you a qualification at the same time! The pay is low, but it is what it is. \n**Choose a course.**\n`type a course name, or \'cancel\' to leave`\n\n';
+            let txt = '>>> **Apprenticeship**\nAll apprenticeships pay you a salary, and give you a qualification at the same time! The pay is low, but it is what it is. \n(duration : 3 D)\n**Choose a course.**\n`type a course name, or \'cancel\' to leave`\n\n';
             txt += '```';
             let courses2 = [];
             globalOBJ.collection.find({userid : 0}).toArray()
@@ -1097,7 +1111,21 @@ client.on('interactionCreate', async interaction => {
               }
               channel.awaitMessages({ filter, max: 1, time: 45000, errors: ['time'] })
                 .then(collected => {
-                  channel.send(collected.first().content)
+                  if (((res[0]['designation'])[(res[0]['designation']).length - 1])[0] == 'none')
+                  {
+                  response = collected.first().content;
+                  for (c of courses2 ) {
+                    if (c.class == 'apprenticeship' && (c.name.toLowerCase()).startsWith(response.toLowerCase()))
+                    {
+                      globalOBJ.collection.updateOne({userid : interaction.member.id}, {$push : {designation : [c.name, Date.now(), c.class]}})
+                      .then(() => channel.send('enrolled in ' + c.name));
+                    } 
+                  }
+
+                 }
+                 else {
+                   channel.send('you\'re already in a course or job, quit it or join this course at a later date')
+                 }
                 })
                 .catch(collected => {
                   console.log(collected);
