@@ -1019,8 +1019,11 @@ client.on('interactionCreate', async interaction => {
     if (lastjob[0] == 'student') {
       txt += 'school student\n' + `${humanizeDuration((lastjob[1] + (60000*60*24)) - Date.now(), {largest : 1})} left in school`;
     }
-    else if (lastjob[3] == 'college course') {
-      txt += 'college student - '+ lastjob[2] +'\n' + `${humanizeDuration(lastjob[1] - Date.now(), {largest : 1})} left in college`;
+    else if (lastjob[2]==='college course') {
+      txt += lastjob[0] +'\n' + `${humanizeDuration((lastjob[1] + (60000*60*24*9)) - Date.now(), {largest : 1})} left in college`;
+    }
+    else if (lastjob[2]==='university course') {
+      txt += lastjob[0] +'\n' + `${humanizeDuration((lastjob[1] + (60000*60*24*21)) - Date.now(), {largest : 1})} left in university`;
     }
     else 
     {
@@ -1032,12 +1035,12 @@ client.on('interactionCreate', async interaction => {
     for ( phase of res[0]['designation']) {
       if ((res[0]['designation']).indexOf(phase) != (res[0]['designation']).length - 1)
       {
-      if (phase[3] == ('course')) {
-        checkQual = true;
-        phase[0] != 'student'?txt += phase [0]:txt += 'high school student';
-        if (phase[2] != undefined)
-          txt += phase [2];
-        txt += '\n';
+      if (phase[2].includes('course') || phase[2] == 'apprenticeship') {
+        if (phase[0] != 'student' && phase[2] != undefined)
+        {
+          checkQual = true;
+          txt += phase [0]+' ['+phase [1]+']\n';
+        }
       }
       }
     }
@@ -1070,12 +1073,92 @@ client.on('interactionCreate', async interaction => {
       e.awaitReactions({ filter, max: 1, time: 20000, errors: ['time'] })
         .then(collected => {
           const reaction = collected.first();
+          function selectCourse(courseClass,txt) {
+            let courses2 = [];
+            txt += '```';
+            globalOBJ.collection.find({ userid: 0 }).toArray()
+              .then(collected => {
+                const tempCourses = collected[0]['courseDetails'];
+                for (c in tempCourses) {
+                  if (tempCourses[c].class == courseClass){
+                    console.log('found a '+courseClass + '\t' + tempCourses[c].name);
+                    courses2.push(tempCourses[c]);
+                    txt += (1 + parseInt(c)) + ' : ' + (tempCourses[c]).name + '\n';
+                  }
+                }
 
+                txt += '```';
+                channel.send(txt);
+                const filter = response => {
+                  const lowerRes = response.content.toLowerCase();
+                  let check = false;
+                  if (response.author.id === interaction.member.id) {
+                    let delimiter = '';
+                    switch(courseClass) {
+                      case 'apprenticeship':
+                        delimiter = ' Apprenticeship';
+                        break;
+                      case 'college course':
+                        break;
+                      case 'university course':
+                        break;
+                      case 'other course':
+                        break;
+                      default :
+                    }
+                    for (c in courses2) {
+                      const cname = courses2[c]['name'];
+                      if ((lowerRes === cname.split(delimiter)[0].toLowerCase()) || lowerRes === cname.split(' Apprenticeship')[0].toLowerCase() + ' apprenticeship')
+                      {
+                        check = true;
+                      }
+                      else if ((1 + parseInt(c)) === parseInt(lowerRes))
+                        check=true;
+                    }
+                  }
+                  if (lowerRes === 'cancel') {
+                    channel.send('*left campus*')
+                    check = false;
+                  }
+                  return check;
+                }
+                channel.awaitMessages({ filter, max: 1, time: 45000, errors: ['time'] })
+                  .then(collected => {
+                    if (((res[0]['designation'])[(res[0]['designation']).length - 1])[0] == 'none') {
+                      let response = collected.first().content;
+                      console.log("filtered - " + response);
+                      let c;
+                      if (parseInt(response) != NaN) {
+                        c = courses2[response - 1];
+                        globalOBJ.collection.updateOne({ userid: interaction.member.id }, { $push: { designation: [c.name, Date.now(), c.class] } })
+                        channel.send('enrolled in ' + c.name);
+                      }
+                      else 
+                      {
+                      for (c of courses2) {
+                        if (c.class == courseClass && (c.name.toLowerCase()).startsWith(response.toLowerCase())) {
+                          globalOBJ.collection.updateOne({ userid: interaction.member.id }, { $push: { designation: [c.name, Date.now(), c.class] } })
+                          channel.send('enrolled in ' + c.name);
+                          break;
+                        }
+                      }
+                      }
+                    }
+                    else {
+                      channel.send('you\'re already in a course or job, quit it or join this course at a later date')
+                    }
+                  })
+                  .catch(collected => {
+                    console.log(collected);
+                    interaction.followUp('no response received');
+                  });
+              });
+          }
           if (reaction.emoji.name === emo[4] && quit == '5️⃣ `close`\n') {
             channel.send(`*left the campus*`);
           }
           else if (reaction.emoji.name === emo[4]) {
-            globalOBJ.collection.updateOne({userid : interaction.member.id}, {$push : {designation : ['none', Date.now(), 'none']}})
+            globalOBJ.collection.updateOne({userid : interaction.member.id}, {$push : {designation : ['none', Date.now(), undefined]}})
             .then (() => {
               channel.send('*you left the course*');
             })
@@ -1085,53 +1168,8 @@ client.on('interactionCreate', async interaction => {
           }
           else if (reaction.emoji.name === emo[0]) {
 
-            let txt = '>>> **Apprenticeship**\nAll apprenticeships pay you a salary, and give you a qualification at the same time! The pay is low, but it is what it is. \n(duration : 3 D)\n**Choose a course.**\n`type a course name, or \'cancel\' to leave`\n\n';
-            txt += '```';
-            let courses2 = [];
-            globalOBJ.collection.find({userid : 0}).toArray()
-            .then(collected => {
-              // console.log('c - '+collected[0]['courseDetails']);
-              courses2 = collected[0]['courseDetails'];
-              for (c in courses2) {
-                // console.log(c + ' = ' + courses2[c]['name'])
-                txt += (1 + parseInt(c))+' : '+(courses2[c]).name + '\n';
-              }
-              txt += '```';
-              channel.send(txt);
-              const filter = response => {
-                if (response.author != interaction.member.user) {
-                  return false;
-                }
-                // let names = [];
-                for (c in courses2) {
-                  if (response.content.toLowerCase() == ((courses2[c]['name']).split(' Apprenticeship')[0]).toLowerCase() || (response.content.toLowerCase() == ((courses2[c]['name']).split(' Apprenticeship')[0]).toLowerCase()) + ' apprenticeship')
-                    return true;
-                }
-                return false;
-              }
-              channel.awaitMessages({ filter, max: 1, time: 45000, errors: ['time'] })
-                .then(collected => {
-                  if (((res[0]['designation'])[(res[0]['designation']).length - 1])[0] == 'none')
-                  {
-                  response = collected.first().content;
-                  for (c of courses2 ) {
-                    if (c.class == 'apprenticeship' && (c.name.toLowerCase()).startsWith(response.toLowerCase()))
-                    {
-                      globalOBJ.collection.updateOne({userid : interaction.member.id}, {$push : {designation : [c.name, Date.now(), c.class]}})
-                      .then(() => channel.send('enrolled in ' + c.name));
-                    } 
-                  }
-
-                 }
-                 else {
-                   channel.send('you\'re already in a course or job, quit it or join this course at a later date')
-                 }
-                })
-                .catch(collected => {
-                  console.log(collected);
-                  interaction.followUp('no response received');
-                 });
-            });
+            let txt = '>>> **Apprenticeship**\nAll apprenticeships pay you a salary, and give you a qualification at the same time! The pay is low, but it is what it is. \n`duration : 3 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
+            selectCourse('apprenticeship', txt);
           }
           else {
             interaction.followUp('`didn\`t recognize that response`')
