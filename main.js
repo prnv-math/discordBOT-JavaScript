@@ -58,7 +58,7 @@ async function dbmain()
   
   await globalOBJ.collection.deleteMany({userid : {$nin : [ownerid, 0 , 1]}});
   
-  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {expenses : [], designation : [['student', Date.now(), 'course']], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
+  await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {expenses : [], designation : [['student', Date.now(), 'high school course'], ['Graphic Design Apprenticeship', Date.now(), 'apprenticeship']], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
    dates : {lastfed : Date.now() - (60000*60*36), hashtag : undefined}, boosts:{cash : 1, hunger : 1, experience : 1} }});
   
   //update course details in database
@@ -473,7 +473,7 @@ client.on('interactionCreate', async interaction => {
     e.addField("\u200B"+"\n" + "\u200B" +"#2 ", "Do not engage in __illegal things__ within the game! including breaking Discord ToS, using hacks, mods, cheats, automation software (commonly known as 'scripts', 'macros', or 'bots').");
     e.addField("\u200B"+"\n" + "\u200B" +"#3 ", "Do not use resources gathered in the game for __'real money trading'.__");
     e.addField("\u200B"+"\n" + "\u200B" +"#4 ", "You may not exploit __errors in design__ ('bugs') or features which have not been documented to gain access which is otherwise not available or to gain an advantage over other Users, and You may not communicate any exploitable issues either directly or through public posting, to any other users of Disco'Life's Services")
-    e.addField("\u200B"+"\n" + "\u200B" +"#5 ", "While allowed to select a username for any item in the game, __do not use" +  " INAPPROPRIATE OR DISALLOWED NAMES.__ the game RESERVES THE RIGHT TO REJECT ANY NAME IT CONCLUDES, IN ITS SOLE DISCRETION, IS OFFENSIVE, OBSCENE, OR THAT OTHERWISE VIOLATES THE NAMING POLICY FOR USERNAMES.".toLocaleLowerCase());
+    e.addField("\u200B"+"\n" + "\u200B" +"#5 ", "While allowed to select a username for any item in the game, __do not use" +  " INAPPROPRIATE OR DISALLOWED NAMES.__ the game RESERVES THE RIGHT TO REJECT ANY NAME IT CONCLUDES, IN ITS SOLE DISCRETION, IS OFFENSIVE, OBSCENE, OR THAT OTHERWISE VIOLATES THE NAMING POLICY FOR USERNAMES.".toLowerCase()+ 'This also applies to other text elements entered by the player, such as hashtags.');
     // let txt = "";
     // for (let x in e) {
     //   txt += e[x] + " ";
@@ -522,7 +522,7 @@ client.on('interactionCreate', async interaction => {
         })
         
         .then(() => createUser(interaction.member.id))
-        .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {cash : 0, bank : reward}, expenses : [], designation : [['student', Date.now() , 'course']]}}))
+        .then (() => globalOBJ.collection.updateOne({userid : interaction.member.id}, {$set : {inventory : {cash : 0, bank : reward}, expenses : [], designation : [['student', Date.now() , 'high school course']]}}))
         .then (() => {
         customizepfp(interaction);
         });
@@ -1016,14 +1016,20 @@ client.on('interactionCreate', async interaction => {
     const lastIndex = (res[0]['designation']).length - 1;
     const lastjob = (res[0]['designation'])[lastIndex];
     let quit = '5️⃣ `quit course`\n' + '6️⃣ `close`\n';
+
+    let duration;
+    const botINFo = await globalOBJ.collection.find({userid:0}).toArray();
+    for (c of botINFo[0]['courseDetails']) {
+      if(c.class === lastjob[2])
+        duration = c.duration;
+      // else if(lastjob[0] != 'student')
+      //  console.log(c.class + ' doesnt match '+lastjob[2])
+    }
     if (lastjob[0] == 'student') {
       txt += 'school student\n' + `${humanizeDuration((lastjob[1] + (60000*60*24)) - Date.now(), {largest : 1})} left in school`;
     }
-    else if (lastjob[2]==='college course') {
-      txt += lastjob[0] +'\n' + `${humanizeDuration((lastjob[1] + (60000*60*24*9)) - Date.now(), {largest : 1})} left in college`;
-    }
-    else if (lastjob[2]==='university course') {
-      txt += lastjob[0] +'\n' + `${humanizeDuration((lastjob[1] + (60000*60*24*21)) - Date.now(), {largest : 1})} left in university`;
+    else if (lastjob[2].includes('course') || lastjob[2] === 'apprenticeship') {
+      txt += lastjob[0] +'\n' + `${humanizeDuration((lastjob[1] + (60000*60*24*duration)) - Date.now(), {largest : 1})} left in ` + lastjob[2].split(' ', 1);
     }
     else 
     {
@@ -1036,10 +1042,11 @@ client.on('interactionCreate', async interaction => {
       if ((res[0]['designation']).indexOf(phase) != (res[0]['designation']).length - 1)
       {
       if (phase[2].includes('course') || phase[2] == 'apprenticeship') {
-        if (phase[0] != 'student' && phase[2] != undefined)
+        if (phase[0] != 'student' && ['none', undefined].includes(phase[2]) == false)
         {
+          const date = new Date(phase[1])
           checkQual = true;
-          txt += phase [0]+' ['+phase [1]+']\n';
+          txt += phase [0]+' ['+date.getDate()+`/${date.getMonth()+1}/${date.getFullYear()}`+']\n';
         }
       }
       }
@@ -1073,7 +1080,7 @@ client.on('interactionCreate', async interaction => {
       e.awaitReactions({ filter, max: 1, time: 20000, errors: ['time'] })
         .then(collected => {
           const reaction = collected.first();
-          function selectCourse(courseClass,txt) {
+          function selectCourse(courseClass,txt, delimiter) {
             let courses2 = [];
             txt += '```';
             globalOBJ.collection.find({ userid: 0 }).toArray()
@@ -1093,19 +1100,6 @@ client.on('interactionCreate', async interaction => {
                   const lowerRes = response.content.toLowerCase();
                   let check = false;
                   if (response.author.id === interaction.member.id) {
-                    let delimiter = '';
-                    switch(courseClass) {
-                      case 'apprenticeship':
-                        delimiter = ' Apprenticeship';
-                        break;
-                      case 'college course':
-                        break;
-                      case 'university course':
-                        break;
-                      case 'other course':
-                        break;
-                      default :
-                    }
                     for (c in courses2) {
                       const cname = courses2[c]['name'];
                       if ((lowerRes === cname.split(delimiter)[0].toLowerCase()) || lowerRes === cname.split(' Apprenticeship')[0].toLowerCase() + ' apprenticeship')
@@ -1127,30 +1121,95 @@ client.on('interactionCreate', async interaction => {
                     if (((res[0]['designation'])[(res[0]['designation']).length - 1])[0] == 'none') {
                       let response = collected.first().content;
                       console.log("filtered - " + response);
-                      let c;
-                      if (parseInt(response) != NaN) {
-                        c = courses2[response - 1];
-                        globalOBJ.collection.updateOne({ userid: interaction.member.id }, { $push: { designation: [c.name, Date.now(), c.class] } })
-                        channel.send('enrolled in ' + c.name);
+                      function isEqual(a, b) {
+                        let check = true;
+                        // If length is not equal
+                        if (a.length != b.length)
+                          return false;
+                        else {
+
+                          // Comparing each element of array
+                          for (let i = 0; i < a.length; i++) {
+                            let chk = 0;
+                            for (let j = 0; j < b.length; j++) {
+                              if (a[i] === b[j]) {
+                                console.log('matched ' + a[i] + ' and ' + b[j])
+                                chk = 1;
+                              }
+                              if (j === b.length - 1 && (chk === 0)) {
+                                check = false;
+                              }
+                            }
+                          }
+                        }
+                        return check;
                       }
-                      else 
+                      if (isNaN(response) == false) {
+                        // console.log(typeof(parseInt(response))+ "\t"+response + " is number")
+                        let c = courses2[response - 1];
+
+                        if(c.eligibility === 'none') {
+                        globalOBJ.collection.updateOne({ userid: interaction.member.id }, { $push: { designation: [c.name, Date.now(), c.class] } })
+                        channel.send('**enrolled in ' + c.name+'**');
+                        }
+                        else
+                        {
+                          let storeElg = [];
+                          for (i of c.eligibility.split(",")) {
+                            for (j of res[0]['designation']) {
+                              if (j[0] === i) {
+                                storeElg.push(i);
+                              }
+                            }
+                          }
+                          if(isEqual(storeElg , c.eligibility.split(","))) {
+                            globalOBJ.collection.updateOne({ userid: interaction.member.id }, { $push: { designation: [c.name, Date.now(), c.class] } })
+                            channel.send('**enrolled in ' + c.name+'**');
+                          }
+                          else {
+                            channel.send('you are not eligible to enroll in this course');
+                          }
+                        }
+                      }
+                      else
                       {
                       for (c of courses2) {
                         if (c.class == courseClass && (c.name.toLowerCase()).startsWith(response.toLowerCase())) {
-                          globalOBJ.collection.updateOne({ userid: interaction.member.id }, { $push: { designation: [c.name, Date.now(), c.class] } })
-                          channel.send('enrolled in ' + c.name);
-                          break;
+                          if(c.eligibility === 'none') {
+                            globalOBJ.collection.updateOne({ userid: interaction.member.id }, { $push: { designation: [c.name, Date.now(), c.class] } })
+                            channel.send('**enrolled in ' + c.name+'**');
+                            break;
+                            }
+                            else
+                            {
+                              let storeElg = [];
+                              for (i of c.eligibility.split(",")) {
+                                for (j of res[0]['designation']) {
+                                  if (j[0] === i) {
+                                    storeElg.push(i);
+                                  }
+                                }
+                              }
+                              if(isEqual(storeElg , c.eligibility.split(","))) {
+                                globalOBJ.collection.updateOne({ userid: interaction.member.id }, { $push: { designation: [c.name, Date.now(), c.class] } })
+                                channel.send('**enrolled in ' + c.name+'**');
+                                break;
+                              }
+                              else {
+                                channel.send('**you are not eligible to enroll in this course**');
+                              }
+                            }
                         }
                       }
                       }
                     }
                     else {
-                      channel.send('you\'re already in a course or job, quit it or join this course at a later date')
+                      channel.send('`you\'re already in a course or job, quit it or join this course at a later date`')
                     }
                   })
                   .catch(collected => {
                     console.log(collected);
-                    interaction.followUp('no response received');
+                    interaction.followUp('`no response received`');
                   });
               });
           }
@@ -1158,7 +1217,7 @@ client.on('interactionCreate', async interaction => {
             channel.send(`*left the campus*`);
           }
           else if (reaction.emoji.name === emo[4]) {
-            globalOBJ.collection.updateOne({userid : interaction.member.id}, {$push : {designation : ['none', Date.now(), undefined]}})
+            globalOBJ.collection.updateOne({userid : interaction.member.id}, {$pull : {designation : lastjob}},{$push : {designation : ['none', Date.now(), 'none']}})
             .then (() => {
               channel.send('*you left the course*');
             })
@@ -1169,7 +1228,7 @@ client.on('interactionCreate', async interaction => {
           else if (reaction.emoji.name === emo[0]) {
 
             let txt = '>>> **Apprenticeship**\nAll apprenticeships pay you a salary, and give you a qualification at the same time! The pay is low, but it is what it is. \n`duration : 3 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
-            selectCourse('apprenticeship', txt);
+            selectCourse('apprenticeship', txt, ' Apprenticeship');
           }
           else {
             interaction.followUp('`didn\`t recognize that response`')

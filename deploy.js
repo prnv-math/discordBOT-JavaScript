@@ -23,10 +23,10 @@ const commands = [
 	new SlashCommandBuilder().setName('boosts').setDescription("See which boosts are active at the moment for your character."),
 	new SlashCommandBuilder().setName('hashtagset').setDescription("let people know how you're feeling!").addStringOption(option => 
 		option.setName('hashtag')
-		.setDescription('type in a text! no need to use #. (most username rules apply to hashtags)')
+		.setDescription('type something nice to use as your hashtag! it looks like this : /hashtagset hashtag: stay_positive')
 		.setRequired(true)
 		),
-	new SlashCommandBuilder().setName('like').setDescription("Give a Like to a player, select \'mention\' or \'gameid\', and select a user or type in their game id")
+	new SlashCommandBuilder().setName('like').setDescription("Give a Like to a player, select \'mention\' or \'gameid\', and ping a user or type their game id")
 	    .addUserOption(option => 
 			option.setName('mention')
 			.setDescription('This is the field where you can mention a user that you want to give a like to.')
