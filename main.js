@@ -63,19 +63,76 @@ async function dbmain()
   
   //update course details in database
   // let courses = [];
-  // function createCourse( course_name, classname ) {
+  // function createCourse( course_name, classname, eligibility = undefined ) {
   //   let newcourse;
-  //   if (classname == 'apprenticeship')
+  //   if (classname === 'apprenticeship')
   //     newcourse = new course (course_name, classname, 3, 'none')
+  //   else if (classname === 'college course')
+  //     newcourse = new course(course_name, classname, 9, 'none')
+  //   else if (classname === 'university course')
+  //   {
+  //     newcourse = new course(course_name, classname, 18, eligibility);
+  //   }
+  //   else if (classname === 'other courses') {
+  //     newcourse = new course(course_name, classname, 2, 'none');
+  //   }
   //   return newcourse;
   // }
   // courses.push(createCourse('Software Development Apprenticeship', 'apprenticeship'));
   // courses.push(createCourse('Graphic Design Apprenticeship', 'apprenticeship'));
+  // courses.push(createCourse('Photography Apprenticeship', 'apprenticeship'));
   // courses.push(createCourse('Ethical Hacking Apprenticeship', 'apprenticeship'));
   // courses.push(createCourse('Mechanic Apprenticeship', 'apprenticeship'));
   // courses.push(createCourse('Accounting Apprenticeship', 'apprenticeship'));
   // courses.push(createCourse('Business Apprenticeship', 'apprenticeship'));
   // courses.push(createCourse('Systems Analysis Apprenticeship', 'apprenticeship'));
+
+  // courses.push(createCourse('Marketing Degree', 'college course'));
+  // courses.push(createCourse('Maths Degree', 'college course'));
+  // courses.push(createCourse('Science Degree', 'college course'));
+  // courses.push(createCourse('Arts Degree', 'college course'));
+  // courses.push(createCourse('Software Engineering Degree', 'college course'));
+  // courses.push(createCourse('Electrical Engineering Degree', 'college course'));
+  // courses.push(createCourse('English Degree', 'college course'));
+  // courses.push(createCourse('Business Degree', 'college course'));
+  // courses.push(createCourse('Psychology Degree', 'college course'));
+  // courses.push(createCourse('Media & Journalism Degree', 'college course'));
+  // courses.push(createCourse('Graphic Design Degree', 'college course'));
+  // courses.push(createCourse('Law Degree', 'college course'));
+  // courses.push(createCourse('Health & Social Care Degree', 'college course'));
+  // courses.push(createCourse('Music Degree', 'college course'));
+  // courses.push(createCourse('Foreign Languages Degree', 'college course'));
+  
+  // courses.push(createCourse('Marketing Masters', 'university course', 'Marketing Degree'));
+  // courses.push(createCourse('Maths Masters', 'university course', 'Maths Degree'));
+  // courses.push(createCourse('Arts Masters', 'university course', 'Arts Degree'));
+  // courses.push(createCourse('Software Engineering Masters', 'university course', 'Software Engineering Degree'));
+  // courses.push(createCourse('Electrical Engineering Masters', 'university course', 'Electrical Engineering Degree'));
+  // courses.push(createCourse('English Masters', 'university course', 'English Degree'));
+  // courses.push(createCourse('Business Masters', 'university course', 'Business Degree'));
+  // courses.push(createCourse('Psychology Masters', 'university course', 'Psychology Degree'));
+  // courses.push(createCourse('Media & Journalism Masters', 'university course', 'Media & Journalism Degree'));
+  // courses.push(createCourse('Graphic Design Masters', 'university course', 'Graphic Design Degree'));
+  // courses.push(createCourse('Law Masters', 'university course', 'Law Degree'));
+  // courses.push(createCourse('Health & Social Care Masters', 'university course', 'Health & Social Care Degree'));
+  // courses.push(createCourse('Music Masters', 'university course', 'Music Degree'));
+  // courses.push(createCourse('Foreign Languages Masters', 'university course', 'Foreign Languages Degree'));
+  // courses.push(createCourse('Dentistry Masters', 'university course', 'Science Degree'));
+  // courses.push(createCourse('Medicine Masters', 'university course', 'Science Degree'));
+  // courses.push(createCourse('Physics Masters', 'university course', 'Science Degree'));
+  // courses.push(createCourse('Forensic Science Masters', 'university course', 'Science Degree'));
+  // courses.push(createCourse('Marine Biology Masters', 'university course', 'Science Degree'));
+
+  // courses.push(createCourse('Sailing course', 'other courses'));
+  // courses.push(createCourse('Wind Surfing course', 'other courses'));
+  // courses.push(createCourse('Property Development course', 'other courses'));
+  // courses.push(createCourse('Paragliding course', 'other courses'));
+  // courses.push(createCourse('Wilderness Survival course', 'other courses'));
+  // courses.push(createCourse('Pilots license & training course', 'other courses'));
+  // courses.push(createCourse('Personal Training course', 'other courses'));
+  // courses.push(createCourse('Martial Arts Training course', 'other courses'));
+  // // courses.push(createCourse(' course', 'other courses'));
+
   // await globalOBJ.collection.updateOne({userid : 0}, {$set : {courseDetails : courses}});
 
   // const insertResult = await globalOBJ.collection.insertMany([{userid: 1 ,  gameid: 2 ,  status: 'ok' }]);
@@ -558,6 +615,17 @@ client.on('interactionCreate', async interaction => {
 
     const res = await globalOBJ.collection.find({userid : interaction.member.id}).toArray();
     try {
+
+      const lastjob = (res[0]['designation'])[(res[0]['designation']).length - 1][0];
+      const lastjob_type = lastjob.split(' ')[lastjob.split(' ').length - 1]
+      let pos=lastjob;
+      if (lastjob_type === 'Degree') {
+        pos = 'college student';
+      }
+      else if (lastjob_type === 'Masters') {
+        pos = 'university student';
+      }
+
       const accessory = res[0]['accessory'];
       const top = res[0]['top'];
       const bottom = res[0]['bottom'];
@@ -623,7 +691,7 @@ client.on('interactionCreate', async interaction => {
       },
         {
           name : 'designation',
-          value : (res[0]['designation'])[(res[0]['designation']).length - 1][0]
+          value : pos
           
         },
         // {
@@ -651,9 +719,6 @@ client.on('interactionCreate', async interaction => {
   }
   else if (interaction.commandName == 'attributes'){
     const res = await globalOBJ.collection.find({userid : interaction.member.id}).toArray();
-    // console.log((res[0]['dates'])['lastfed'])
-    // const d = new Date((res[0]['dates'])['lastfed']);
-    // console.log(d);
     let embedd = emb('Attributes', "`all values for different attributes represent percentage values, of current value with respect to maximum value.`"); 
     embedd.setAuthor({
       name: res[0]['username'],
@@ -847,7 +912,7 @@ client.on('interactionCreate', async interaction => {
     let txt = "**account balance** : `$" + (res[0]['inventory'])['bank'] + "`\n\n__**Recurring expenses**__"+'\n```';
     let expensesCheck = false;
     for (pair of res[0]['expenses']) {
-      if (pair != undefined) {
+      if (pair != undefined && pair[1]>0) {
         expensesCheck = 1;
         txt+= pair[0] + " [$"+ pair[1] +"] " +"\n";
       } 
@@ -1026,10 +1091,13 @@ client.on('interactionCreate', async interaction => {
       //  console.log(c.class + ' doesnt match '+lastjob[2])
     }
     if (lastjob[0] == 'student') {
-      txt += 'school student\n' + `${humanizeDuration((lastjob[1] + (60000*60*24)) - Date.now(), {largest : 1})} left in school`;
+      txt += 'school student\n' + `${humanizeDuration((lastjob[1] + (60000*60*24)) - Date.now(), {largest : 2})} left in school`;
+    }
+    else if (lastjob[2] === 'other courses') {
+      txt += lastjob[0] +'\n' + `${humanizeDuration((lastjob[1] + (60000*60*24*duration)) - Date.now(), {largest : 2})} remaining until completion`;
     }
     else if (lastjob[2].includes('course') || lastjob[2] === 'apprenticeship') {
-      txt += lastjob[0] +'\n' + `${humanizeDuration((lastjob[1] + (60000*60*24*duration)) - Date.now(), {largest : 1})} left in ` + lastjob[2].split(' ', 1);
+      txt += lastjob[0] +'\n' + `${humanizeDuration((lastjob[1] + (60000*60*24*duration)) - Date.now(), {largest : 2})} left in ` + lastjob[2].split(' ', 1);
     }
     else 
     {
@@ -1086,11 +1154,15 @@ client.on('interactionCreate', async interaction => {
             globalOBJ.collection.find({ userid: 0 }).toArray()
               .then(collected => {
                 const tempCourses = collected[0]['courseDetails'];
+                let count = 0;
+                let space;
+                (['college course','university course'].includes(courseClass))?space = ' ':space = '';
                 for (c in tempCourses) {
                   if (tempCourses[c].class == courseClass){
+                    count++;
                     console.log('found a '+courseClass + '\t' + tempCourses[c].name);
                     courses2.push(tempCourses[c]);
-                    txt += (1 + parseInt(c)) + ' : ' + (tempCourses[c]).name + '\n';
+                    (count < 10)?txt += count + space +' : ' + (tempCourses[c]).name + '\n':txt += count + space +': ' + (tempCourses[c]).name + '\n';
                   }
                 }
 
@@ -1167,7 +1239,7 @@ client.on('interactionCreate', async interaction => {
                             channel.send('**enrolled in ' + c.name+'**');
                           }
                           else {
-                            channel.send('you are not eligible to enroll in this course');
+                            channel.send('you are not eligible to enroll in this course' + '\n```you shall need : \n'  + c.eligibility + '```');
                           }
                         }
                       }
@@ -1217,7 +1289,8 @@ client.on('interactionCreate', async interaction => {
             channel.send(`*left the campus*`);
           }
           else if (reaction.emoji.name === emo[4]) {
-            globalOBJ.collection.updateOne({userid : interaction.member.id}, {$pull : {designation : lastjob}},{$push : {designation : ['none', Date.now(), 'none']}})
+            globalOBJ.collection.updateOne({userid : interaction.member.id}, {$pull : {designation : lastjob}});
+            globalOBJ.collection.updateOne({userid: interaction.member.id}, {$push : {designation : ['none', Date.now(), 'none']}})
             .then (() => {
               channel.send('*you left the course*');
             })
@@ -1229,6 +1302,18 @@ client.on('interactionCreate', async interaction => {
 
             let txt = '>>> **Apprenticeship**\nAll apprenticeships pay you a salary, and give you a qualification at the same time! The pay is low, but it is what it is. \n`duration : 3 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
             selectCourse('apprenticeship', txt, ' Apprenticeship');
+          }
+          else if (reaction.emoji.name === emo[1]) {
+            let txt = '**College courses**\n'+'`duration : 9 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
+            selectCourse('college course', txt, ' Degree');
+          }
+          else if (reaction.emoji.name === emo[2]) {
+            let txt = '**University courses**\nAll university courses require a specific degree, in order to grant you admission to the course.\n'+'`duration : 18 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
+            selectCourse('university course', txt, ' Masters');
+          }
+          else if(reaction.emoji.name === emo[3]) {
+            let txt = '**Other courses**\nThese are short duration and upfront payment courses that make you job ready in specific fields.\n'+'`duration : 2 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
+            selectCourse('other courses', txt, ' course')
           }
           else {
             interaction.followUp('`didn\`t recognize that response`')
