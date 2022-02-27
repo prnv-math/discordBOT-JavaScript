@@ -615,12 +615,19 @@ client.on('interactionCreate', async interaction => {
 
     const res = await globalOBJ.collection.find({userid : interaction.member.id}).toArray();
     try {
+      console.log('----------------------------------------')
 
       const lastjob = (res[0]['designation'])[(res[0]['designation']).length - 1][0];
       const lastjob_type = lastjob.split(' ')[lastjob.split(' ').length - 1]
       let pos=lastjob;
       if (lastjob_type === 'Degree') {
         pos = 'college student';
+      }
+      if(lastjob_type === 'Apprenticeship') {
+        pos = lastjob.replace('Apprenticeship', 'apprentice').toLowerCase();
+      }
+      else if (lastjob_type === 'course') {
+        pos = 'short term course student, \n'+lastjob.replace('course', '').toLowerCase();
       }
       else if (lastjob_type === 'Masters') {
         pos = 'university student';
@@ -1304,15 +1311,15 @@ client.on('interactionCreate', async interaction => {
             selectCourse('apprenticeship', txt, ' Apprenticeship');
           }
           else if (reaction.emoji.name === emo[1]) {
-            let txt = '**College courses**\n'+'`duration : 9 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
+            let txt = '>>> **College courses**\n'+'`duration : 9 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
             selectCourse('college course', txt, ' Degree');
           }
           else if (reaction.emoji.name === emo[2]) {
-            let txt = '**University courses**\nAll university courses require a specific degree, in order to grant you admission to the course.\n'+'`duration : 18 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
+            let txt = '>>> **University courses**\nAll university courses require a specific degree, in order to grant you admission to the course.\n'+'`duration : 18 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
             selectCourse('university course', txt, ' Masters');
           }
           else if(reaction.emoji.name === emo[3]) {
-            let txt = '**Other courses**\nThese are short duration and upfront payment courses that make you job ready in specific fields.\n'+'`duration : 2 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
+            let txt = '>>> **Other courses**\nThese are short duration and upfront payment courses that make you job ready in specific fields.\n'+'`duration : 2 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
             selectCourse('other courses', txt, ' course')
           }
           else {
