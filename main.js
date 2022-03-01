@@ -1157,7 +1157,21 @@ client.on('interactionCreate', async interaction => {
           const reaction = collected.first();
           function selectCourse(courseClass,txt, delimiter) {
             let courses2 = [];
-            txt += '';
+            let embTitle = '';
+            switch (delimiter) {
+              case 'Apprenticeship':
+                embTitle = 'Aprrenticeships';
+                break;
+              case 'Degree':
+                embTitle = 'College courses';
+                break;
+              case 'Masters':
+                embTitle = 'University courses';
+                break;
+              case 'course':
+                embTitle = 'Other courses';
+                break;
+            }
             globalOBJ.collection.find({ userid: 0 }).toArray()
               .then(collected => {
                 const tempCourses = collected[0]['courseDetails'];
@@ -1174,17 +1188,6 @@ client.on('interactionCreate', async interaction => {
                     console.log('found a '+courseClass + '\t' + tempCourses[c].name);
                     courses2.push(tempCourses[c]);
                     let numEmo = '';
-                    // if (count < 10) {
-                    // switch(count) {
-                    //   case 1 : 
-                    //     numEmo = '0️⃣1️⃣';
-                    //     break;
-                    //   case 2:
-                    //     numEmo = '0️⃣2️⃣';
-                    //     break;
-                        
-                    // }
-                    // }
                     tempCount = count;
                     let countDigitArray = [];
                     while (tempCount > 0) {
@@ -1226,10 +1229,11 @@ client.on('interactionCreate', async interaction => {
                     }
                     if (count < 10 && ['college course','university course'].includes(courseClass))
                       numEmo = '0️⃣' + numEmo;
-                    txt += numEmo + '  : `' + tempCourses[c].name + '`\n';
+                    txt += numEmo + ' `' + tempCourses[c].name + '`\n';
                   }
                 }
-                channel.send(txt);
+                let cEmbed = emb(embTitle, txt);
+                channel.send({embeds : [cEmbed]});
                 const filter = response => {
                   const lowerRes = response.content.toLowerCase();
                   let check = false;
@@ -1347,7 +1351,7 @@ client.on('interactionCreate', async interaction => {
                   });
               });
           }
-          if (reaction.emoji.name === emo[4] && quit == '5️⃣ `close`\n') {
+          if ((reaction.emoji.name === emo[4] && quit == '5️⃣ `close`\n' ) || reaction.emoji.name === emo[5]) {
             channel.send(`*left the campus*`);
           }
           else if (reaction.emoji.name === emo[4]) {
