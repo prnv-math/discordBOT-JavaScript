@@ -1157,23 +1157,78 @@ client.on('interactionCreate', async interaction => {
           const reaction = collected.first();
           function selectCourse(courseClass,txt, delimiter) {
             let courses2 = [];
-            txt += '```';
+            txt += '';
             globalOBJ.collection.find({ userid: 0 }).toArray()
               .then(collected => {
                 const tempCourses = collected[0]['courseDetails'];
                 let count = 0;
-                let space;
-                (['college course','university course'].includes(courseClass))?space = ' ':space = '';
+                // let space = '';
+                // if (['college course','university course'].includes(courseClass))
+                // {
+                //   console.log('yes\n');
+                //   space = ' ';
+                // }
                 for (c in tempCourses) {
                   if (tempCourses[c].class == courseClass){
                     count++;
                     console.log('found a '+courseClass + '\t' + tempCourses[c].name);
                     courses2.push(tempCourses[c]);
-                    (count < 10)?txt += count + space +' : ' + (tempCourses[c]).name + '\n':txt += count + space +': ' + (tempCourses[c]).name + '\n';
+                    let numEmo = '';
+                    // if (count < 10) {
+                    // switch(count) {
+                    //   case 1 : 
+                    //     numEmo = '0️⃣1️⃣';
+                    //     break;
+                    //   case 2:
+                    //     numEmo = '0️⃣2️⃣';
+                    //     break;
+                        
+                    // }
+                    // }
+                    tempCount = count;
+                    let countDigitArray = [];
+                    while (tempCount > 0) {
+                      countDigitArray.push(tempCount%10);
+                      tempCount = Math.floor(tempCount / 10);
+                    }
+                    countDigitArray.reverse();
+                    for (d of countDigitArray) {
+                      switch (d) {
+                        case 1:
+                          numEmo += '1️⃣';
+                          break;
+                        case 2:
+                          numEmo += '2️⃣';
+                          break;
+                        case 3:
+                          numEmo += '3️⃣';
+                          break;
+                        case 4:
+                          numEmo += '4️⃣';
+                          break;
+                        case 5:
+                          numEmo += '5️⃣';
+                          break;
+                        case 6:
+                          numEmo += '6️⃣';
+                          break;
+                        case 7:
+                          numEmo += '7️⃣';
+                          break;
+                        case 8:
+                          numEmo += '8️⃣';
+                          break;
+                        case 9 :
+                          numEmo += '9️⃣';
+                          break;
+                        default : numEmo += '0️⃣';
+                      }
+                    }
+                    if (count < 10 && ['college course','university course'].includes(courseClass))
+                      numEmo = '0️⃣' + numEmo;
+                    txt += numEmo + '  : `' + tempCourses[c].name + '`\n';
                   }
                 }
-
-                txt += '```';
                 channel.send(txt);
                 const filter = response => {
                   const lowerRes = response.content.toLowerCase();
