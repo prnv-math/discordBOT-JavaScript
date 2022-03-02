@@ -1157,21 +1157,21 @@ client.on('interactionCreate', async interaction => {
           const reaction = collected.first();
           function selectCourse(courseClass,txt, delimiter) {
             let courses2 = [];
-            let embTitle = '';
-            switch (delimiter) {
-              case 'Apprenticeship':
-                embTitle = 'Aprrenticeships';
-                break;
-              case 'Degree':
-                embTitle = 'College courses';
-                break;
-              case 'Masters':
-                embTitle = 'University courses';
-                break;
-              case 'course':
-                embTitle = 'Other courses';
-                break;
-            }
+            // let embTitle = '';
+            // switch (delimiter) {
+            //   case 'Apprenticeship':
+            //     embTitle = 'Aprrenticeships';
+            //     break;
+            //   case 'Degree':
+            //     embTitle = 'College courses';
+            //     break;
+            //   case 'Masters':
+            //     embTitle = 'University courses';
+            //     break;
+            //   case 'course':
+            //     embTitle = 'Other courses';
+            //     break;
+            // }
             globalOBJ.collection.find({ userid: 0 }).toArray()
               .then(collected => {
                 const tempCourses = collected[0]['courseDetails'];
@@ -1232,7 +1232,7 @@ client.on('interactionCreate', async interaction => {
                     txt += numEmo + ' `' + tempCourses[c].name + '`\n';
                   }
                 }
-                let cEmbed = emb(embTitle, txt);
+                let cEmbed = emb('', txt);
                 channel.send({embeds : [cEmbed]});
                 const filter = response => {
                   const lowerRes = response.content.toLowerCase();
@@ -1250,7 +1250,7 @@ client.on('interactionCreate', async interaction => {
                   }
                   if (lowerRes === 'cancel') {
                     channel.send('*left campus*')
-                    check = false;
+                    check = true;
                   }
                   return check;
                 }
@@ -1342,7 +1342,8 @@ client.on('interactionCreate', async interaction => {
                       }
                     }
                     else {
-                      channel.send('`you\'re already in a course or job, quit it or join this course at a later date`')
+                      if (collected.first().content != 'cancel')
+                       channel.send('`you\'re already in a course or job, quit it or join this course at a later date`')
                     }
                   })
                   .catch(collected => {
@@ -1366,19 +1367,19 @@ client.on('interactionCreate', async interaction => {
           }
           else if (reaction.emoji.name === emo[0]) {
 
-            let txt = '>>> **Apprenticeship**\nAll apprenticeships pay you a salary, and give you a qualification at the same time! The pay is low, but it is what it is. \n`duration : 3 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
+            let txt = '**Apprenticeship**\nAll apprenticeships pay you a salary, and give you a qualification at the same time! The pay is low, but it is what it is. \n`duration : 3 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
             selectCourse('apprenticeship', txt, ' Apprenticeship');
           }
           else if (reaction.emoji.name === emo[1]) {
-            let txt = '>>> **College courses**\n'+'`duration : 9 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
+            let txt = '**College courses**\n'+'`duration : 9 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
             selectCourse('college course', txt, ' Degree');
           }
           else if (reaction.emoji.name === emo[2]) {
-            let txt = '>>> **University courses**\nAll university courses require a specific degree, in order to grant you admission to the course.\n'+'`duration : 18 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
+            let txt = '**University courses**\nAll university courses require a specific degree, in order to grant you admission to the course.\n'+'`duration : 18 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
             selectCourse('university course', txt, ' Masters');
           }
           else if(reaction.emoji.name === emo[3]) {
-            let txt = '>>> **Other courses**\nThese are short duration and upfront payment courses that make you job ready in specific fields.\n'+'`duration : 2 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
+            let txt = '**Other courses**\nThese are short duration and upfront payment courses that make you job ready in specific fields.\n'+'`duration : 2 D`\n**Choose a course.**\n`type a course name, number, or \'cancel\' to leave`\n\n';
             selectCourse('other courses', txt, ' course')
           }
           else {
@@ -1390,6 +1391,9 @@ client.on('interactionCreate', async interaction => {
         interaction.followUp('no response received');
        });
     // });
+  }
+  else if (interaction.commandName == 'jobs') {
+
   }
   else {
     interaction.reply('`work in progress :<`');
