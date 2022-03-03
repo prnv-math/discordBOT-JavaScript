@@ -1393,7 +1393,9 @@ client.on('interactionCreate', async interaction => {
     // });
   }
   else if (interaction.commandName == 'jobs') {
-
+    let jEmbed = emb("Job Portal");
+    jEmbed.setThumbnail("https://i.imgur.com/HVbosG1.jpg");
+    interaction.reply({embeds : [jEmbed]});
   }
   else {
     interaction.reply('`work in progress :<`');
