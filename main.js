@@ -31,6 +31,14 @@ class course {
     this.eligibility = eligibility;
   }
 }
+class job {
+  constructor(job_name, category,salary,eligibility = undefined) {
+    this.name = job_name;
+    this.class = category;
+    this.eligibility = eligibility;
+    this.salary = salary;
+  }
+}
 
 	// .setColor('#0099ff')
 	// .setTitle('Some title')
@@ -60,6 +68,29 @@ async function dbmain()
   
   await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {expenses : [], designation : [['student', Date.now(), 'high school course'], ['Graphic Design Apprenticeship', Date.now(), 'apprenticeship']], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
    dates : {lastfed : Date.now() - (60000*60*36), hashtag : undefined}, boosts:{cash : 1, hunger : 1, experience : 1} }});
+  
+  //update job details in database
+  let jobs = [];
+  let j;
+  j = new job ('Dishwasher', 'entry level', 200, 'none');
+  jobs.push(j);
+  j = new job ('Cleaner', 'entry level', 220, 'Dishwasher=2');
+  jobs.push(j);
+  j = new job ('Retail Assistant', 'entry level', 220, 'Dishwasher=3');
+  jobs.push(j);
+  j = new job ('Funeral Assistant', 'entry level', 280, 'Dishwasher=4');
+  jobs.push(j);
+  j = new job ('Waiter', 'entry level', 300, 'Dishwasher=6');
+  jobs.push(j);
+  j = new job ('Delivery boy', 'entry level', 300, 'Dishwasher=6');
+  jobs.push(j);
+  j = new job ('Book Keeper', 'entry level', 300, 'Cleaner=3,Accounting Apprenticeship');
+  jobs.push(j);
+  j = new job ('Translator', 'entry level', 320, 'Foreign Languages Degree');
+  jobs.push(j);
+  j = new job ('Typist', 'entry level', 340, 'English Degree');
+  jobs.push(j);
+  await globalOBJ.collection.updateOne({userid : 0}, {$set : {jobDetails : jobs}});
   
   //update course details in database
   // let courses = [];
@@ -1036,7 +1067,7 @@ client.on('interactionCreate', async interaction => {
               channel.send(">>> Application for Loan rejected by bank.\nPerhaps you need to have more cash as loan security.");
             }
             else {
-              loan < 10000 ? loan = (Math.ceil(((res[0]['inventory'])['bank'] + (res[0]['inventory'])['cash']) / (1.5 * 100))) * 100 : loan = 10000;
+              loan < 3000 ? loan = (Math.ceil(((res[0]['inventory'])['bank'] + (res[0]['inventory'])['cash']) / (1.5 * 100))) * 100 : loan = 3000;
               channel.send('>>> **You will receive a loan for $' + loan + '** which you will have to pay back, as well as \na (not so)small additional interest. \n**Continue?**')
                 .then(collected => {
                   const emot = ['✅', '❎'];
@@ -1393,8 +1424,35 @@ client.on('interactionCreate', async interaction => {
     // });
   }
   else if (interaction.commandName == 'jobs') {
-    let jEmbed = emb("Job Portal");
-    jEmbed.setThumbnail("https://i.imgur.com/HVbosG1.jpg");
+    let jEmbed = new discord.MessageEmbed();
+    let txt="__**Employment status**__\n`";
+    const res = await globalOBJ.collection.find({userid:interaction.member.id}).toArray();
+    const bot_res = await globalOBJ.collection.find({userid:0}).toArray();
+    const lastjob = (res[0]['designation'])[(res[0]['designation']).length - 1][0];
+    const lastjob_type = lastjob.split(' ')[lastjob.split(' ').length - 1]
+    if (lastjob_type == "job") {
+      txt += lastjob[0] + "`\n__**Salary**__\n`";
+      for (i of bot_res['jobDetails']) {
+        if (i.name == lastjob[0]) {
+          txt+= i.salary + '`';
+          break;
+        }
+      }
+    }
+    else {
+      if (lastjob_type == "apprenticeship") {
+        txt += 'Apprenticeship' + "`\n__**Stipend**__\n`" + '200`';
+      }
+      else {
+      txt+= "unemployed" + "`\n__**Salary**__\n`0`" ;
+      }
+    }
+    jEmbed.setAuthor({
+      name :"Job portal",
+      url :"",
+      iconURL : "https://i.imgur.com/TGcO8T6.gif"
+    });
+    jEmbed.setDescription(txt);
     interaction.reply({embeds : [jEmbed]});
   }
   else {
