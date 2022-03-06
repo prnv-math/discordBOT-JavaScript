@@ -1424,22 +1424,25 @@ client.on('interactionCreate', async interaction => {
     // });
   }
   else if (interaction.commandName == 'jobs') {
-    let jEmbed = new discord.MessageEmbed();
     let txt="__**Employment status**__\n`";
+    let quit = '5️⃣ `quit job`\n' + '6️⃣ `close`\n';
+
     const res = await globalOBJ.collection.find({userid:interaction.member.id}).toArray();
     const bot_res = await globalOBJ.collection.find({userid:0}).toArray();
     const lastjob = (res[0]['designation'])[(res[0]['designation']).length - 1][0];
     const lastjob_type = lastjob.split(' ')[lastjob.split(' ').length - 1]
+
     if (lastjob_type == "job") {
       txt += lastjob[0] + "`\n__**Salary**__\n`";
       for (i of bot_res['jobDetails']) {
-        if (i.name == lastjob[0]) {
+        if (i.name === lastjob[0]) {
           txt+= i.salary + '`';
           break;
         }
       }
     }
     else {
+      quit = '5️⃣ `close`\n';
       if (lastjob_type == "apprenticeship") {
         txt += 'Apprenticeship' + "`\n__**Stipend**__\n`" + '200`';
       }
@@ -1447,12 +1450,13 @@ client.on('interactionCreate', async interaction => {
       txt+= "unemployed" + "`\n__**Salary**__\n`0`" ;
       }
     }
+    txt += '\n\n1️⃣ `Entry level`\n2️⃣ `Operational level`\n3️⃣ `High level`\n4️⃣ `Top level`\n' + quit ;
+    let jEmbed = emb("", txt);
     jEmbed.setAuthor({
       name :"Job portal",
       url :"",
-      iconURL : "https://i.imgur.com/TGcO8T6.gif"
+      iconURL : "https://i.imgur.com/YANRwHe.jpg"
     });
-    jEmbed.setDescription(txt);
     interaction.reply({embeds : [jEmbed]});
   }
   else {
