@@ -1447,7 +1447,7 @@ client.on('interactionCreate', async interaction => {
         txt += 'Apprenticeship' + "`\n__**Stipend**__\n`" + '200`';
       }
       else {
-      txt+= "unemployed" + "`\n__**Salary**__\n`0`" ;
+      txt+= "unemployed" + "`\n__**Salary**__\n`0`" + "\n__-------------------------------__";
       }
     }
     txt += '\n\n1️⃣ `Entry level`\n2️⃣ `Operational level`\n3️⃣ `High level`\n4️⃣ `Top level`\n' + quit ;
@@ -1457,7 +1457,26 @@ client.on('interactionCreate', async interaction => {
       url :"",
       iconURL : "https://i.imgur.com/YANRwHe.jpg"
     });
-    interaction.reply({embeds : [jEmbed]});
+    const emo = ['1️⃣','2️⃣', '3️⃣','4️⃣','5️⃣','6️⃣'];
+    const main_msg = await interaction.reply({embeds : [jEmbed], fetchReply : true});
+    main_msg.react(emo[0]);
+    main_msg.react(emo[1]);
+    main_msg.react(emo[2]);
+    main_msg.react(emo[3]);
+    main_msg.react(emo[4])
+    if(quit != '5️⃣ `close`\n')
+      main_msg.react(emo[5])
+    const filter = (reaction, user) => {
+         return emo.includes(reaction.emoji.name) && (user.id === interaction.member.id);
+    };
+    
+    main_msg.awaitReactions({ filter, max: 1, time: 15000, errors: ['time'] })
+     .then(async collected => {
+      const reaction = collected.first();
+      if (reaction.emoji.name === emo[4] && quit === '5️⃣ `close`\n') {
+        channel.send('*closed job portal*');
+      }
+      })
   }
   else {
     interaction.reply('`work in progress :<`');
