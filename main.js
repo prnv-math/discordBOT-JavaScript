@@ -69,28 +69,28 @@ async function dbmain()
   await globalOBJ.collection.updateOne({userid:ownerid}, {$set : {expenses : [], designation : [['student', Date.now(), 'high school course'], ['Graphic Design Apprenticeship', Date.now(), 'apprenticeship']], relationship : [{_id : 1, info : 'single', strength : 0, playerid : 0},{_id : 2, info : 'father', strength : 0, playerid : 0 , name : 'secret'}, {_id : 3, info : 'mother', strength : 0, playerid : 0, name : 'secret'}], attributes : {experience : 0, hunger : 0, health : 100, fitness : 30, logic : 30, criminality : 30},
    dates : {lastfed : Date.now() - (60000*60*36), hashtag : undefined}, boosts:{cash : 1, hunger : 1, experience : 1} }});
   
-  //update job details in database
-  let jobs = [];
-  let j;
-  j = new job ('Dishwasher', 'entry level', 200, 'none');
-  jobs.push(j);
-  j = new job ('Cleaner', 'entry level', 220, 'Dishwasher=2');
-  jobs.push(j);
-  j = new job ('Retail Assistant', 'entry level', 220, 'Dishwasher=3');
-  jobs.push(j);
-  j = new job ('Funeral Assistant', 'entry level', 280, 'Dishwasher=4');
-  jobs.push(j);
-  j = new job ('Waiter', 'entry level', 300, 'Dishwasher=6');
-  jobs.push(j);
-  j = new job ('Delivery boy', 'entry level', 300, 'Dishwasher=6');
-  jobs.push(j);
-  j = new job ('Book Keeper', 'entry level', 300, 'Cleaner=3,Accounting Apprenticeship');
-  jobs.push(j);
-  j = new job ('Translator', 'entry level', 320, 'Foreign Languages Degree');
-  jobs.push(j);
-  j = new job ('Typist', 'entry level', 340, 'English Degree');
-  jobs.push(j);
-  await globalOBJ.collection.updateOne({userid : 0}, {$set : {jobDetails : jobs}});
+  // //update job details in database
+  // let jobs = [];
+  // let j;
+  // j = new job ('Dishwasher', 'entry level', 200, 'none');
+  // jobs.push(j);
+  // j = new job ('Cleaner', 'entry level', 220, 'Dishwasher=2');
+  // jobs.push(j);
+  // j = new job ('Retail Assistant', 'entry level', 220, 'Dishwasher=3');
+  // jobs.push(j);
+  // j = new job ('Funeral Assistant', 'entry level', 280, 'Dishwasher=4');
+  // jobs.push(j);
+  // j = new job ('Waiter', 'entry level', 300, 'Dishwasher=6');
+  // jobs.push(j);
+  // j = new job ('Delivery boy', 'entry level', 300, 'Dishwasher=6');
+  // jobs.push(j);
+  // j = new job ('Book Keeper', 'entry level', 300, 'Cleaner=3,Accounting Apprenticeship');
+  // jobs.push(j);
+  // j = new job ('Translator', 'entry level', 320, 'Foreign Languages Degree');
+  // jobs.push(j);
+  // j = new job ('Typist', 'entry level', 340, 'English Degree');
+  // jobs.push(j);
+  // await globalOBJ.collection.updateOne({userid : 0}, {$set : {jobDetails : jobs}});
   
   //update course details in database
   // let courses = [];
@@ -1473,8 +1473,17 @@ client.on('interactionCreate', async interaction => {
     main_msg.awaitReactions({ filter, max: 1, time: 15000, errors: ['time'] })
      .then(async collected => {
       const reaction = collected.first();
+      function selectJob(  jobClass ) {
+        console.log(jobClass);
+      }
       if (reaction.emoji.name === emo[4] && quit === '5️⃣ `close`\n') {
         channel.send('*closed job portal*');
+      }
+      else if (reaction.emoji.name === emo[5]) {
+        channel.send('*closed job portal*');
+      }
+      else if (reaction.emoji.name === emo[0]) {
+        selectJob('entry level')
       }
       })
   }
