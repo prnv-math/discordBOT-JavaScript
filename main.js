@@ -1475,6 +1475,11 @@ client.on('interactionCreate', async interaction => {
       const reaction = collected.first();
       function selectJob(  jobClass ) {
         console.log(jobClass);
+        switch (jobClass) {
+          case 'entry level':
+            txt = "**Entry Level jobs**\nThese jobs are at the lowest level of job hierarchy of almost any field.\n**Apply for a job**";
+          }
+        channel.send(txt);
       }
       if (reaction.emoji.name === emo[4] && quit === '5️⃣ `close`\n') {
         channel.send('*closed job portal*');
