@@ -1219,7 +1219,7 @@ client.on('interactionCreate', async interaction => {
                     console.log('found a '+courseClass + '\t' + tempCourses[c].name);
                     courses2.push(tempCourses[c]);
                     let numEmo = '';
-                    tempCount = count;
+                    let tempCount = count;
                     let countDigitArray = [];
                     while (tempCount > 0) {
                       countDigitArray.push(tempCount%10);
@@ -1434,7 +1434,7 @@ client.on('interactionCreate', async interaction => {
 
     if (lastjob_type == "job") {
       txt += lastjob[0] + "`\n__**Salary**__\n`";
-      for (i of bot_res['jobDetails']) {
+      for (i of bot_res[0]['jobDetails']) {
         if (i.name === lastjob[0]) {
           txt+= i.salary + '`';
           break;
@@ -1477,9 +1477,67 @@ client.on('interactionCreate', async interaction => {
         console.log(jobClass);
         switch (jobClass) {
           case 'entry level':
-            txt = "**Entry Level jobs**\nThese jobs are at the lowest level of job hierarchy of almost any field.\n**Apply for a job**";
+            txt = "**Entry Level jobs**\n`These jobs are usually found at the lowest level of job hierarchy.`\n**Apply for a job**\n";
+            break;
+          case 'operational level':
+            txt = "**Operational Level jobs**\nOperational level jobs are low level jobs that may require job specific skill.\n**Apply for a job**\n"
+        }
+        txt+='`type a job name, number, or \'cancel\' to leave`\n\n';
+        let jobs = [];
+        let count = 0;
+        const tempJob = bot_res[0]['jobDetails'];  
+        for (j in tempJob) {
+          if (tempJob[j].class == jobClass){
+            count++;
+            console.log('found a '+jobClass + '\t' + tempJob[j].name);
+            jobs.push(tempJob[j]);
+            let numEmo = '';
+            let tempCount = count;
+            let countDigitArray = [];
+            while (tempCount > 0) {
+              countDigitArray.push(tempCount%10);
+              tempCount = Math.floor(tempCount / 10);
+            }
+            countDigitArray.reverse();
+            for (d of countDigitArray) {
+              switch (d) {
+                case 1:
+                  numEmo += '1️⃣';
+                  break;
+                case 2:
+                  numEmo += '2️⃣';
+                  break;
+                case 3:
+                  numEmo += '3️⃣';
+                  break;
+                case 4:
+                  numEmo += '4️⃣';
+                  break;
+                case 5:
+                  numEmo += '5️⃣';
+                  break;
+                case 6:
+                  numEmo += '6️⃣';
+                  break;
+                case 7:
+                  numEmo += '7️⃣';
+                  break;
+                case 8:
+                  numEmo += '8️⃣';
+                  break;
+                case 9 :
+                  numEmo += '9️⃣';
+                  break;
+                default : numEmo += '0️⃣';
+              }
+            }
+            if (count < 10 && ['none'].includes(jobClass))
+              numEmo = '0️⃣' + numEmo;
+            txt += numEmo + ' `' + tempJob[j].name + '`\n';
           }
-        channel.send(txt);
+        }
+        const jobEmbed = emb("", txt);
+        channel.send({embeds : [jobEmbed]});
       }
       if (reaction.emoji.name === emo[4] && quit === '5️⃣ `close`\n') {
         channel.send('*closed job portal*');
@@ -1488,7 +1546,16 @@ client.on('interactionCreate', async interaction => {
         channel.send('*closed job portal*');
       }
       else if (reaction.emoji.name === emo[0]) {
-        selectJob('entry level')
+        selectJob('entry level');
+      }
+      else if (reaction.emoji.name === emo[1]) {
+        selectJob('operational level');
+      }
+      else if (reaction.emoji.name === emo[2]) {
+        selectJob('high level');
+      }
+      else if (reaction.emoji.name === emo[3]) {
+        selectJob('top level');
       }
       })
   }
